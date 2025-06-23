@@ -44,6 +44,8 @@ export const mockJobs: JobPosition[] = [
     id: '1',
     title: 'Camarero/a de Sala',
     description: 'Atención al cliente en tabanco tradicional. Conocimiento de vinos de Jerez valorado.',
+    business: 'Tabanco Las Banderillas',
+    city: 'Jerez de la Frontera',
     isActive: true,
     createdAt: new Date('2024-01-15')
   },
@@ -51,6 +53,8 @@ export const mockJobs: JobPosition[] = [
     id: '2',
     title: 'Cocinero/a',
     description: 'Preparación de tapas tradicionales y platos de la casa. Experiencia en cocina andaluza.',
+    business: 'Taberna Jerez',
+    city: 'Jerez de la Frontera',
     isActive: true,
     createdAt: new Date('2024-01-10')
   },
@@ -58,6 +62,8 @@ export const mockJobs: JobPosition[] = [
     id: '3',
     title: 'Ayudante de Cocina',
     description: 'Apoyo en cocina, preparación de ingredientes y mantenimiento del área de trabajo.',
+    business: 'Tabanco San Pablo',
+    city: 'Jerez de la Frontera',
     isActive: true,
     createdAt: new Date('2024-01-20')
   },
@@ -65,6 +71,8 @@ export const mockJobs: JobPosition[] = [
     id: '4',
     title: 'Barman/Barmaid',
     description: 'Preparación de cócteles y bebidas. Conocimiento en vinos y licores de la zona.',
+    business: 'Restaurante Mareal',
+    city: 'Jerez de la Frontera',
     isActive: true,
     createdAt: new Date('2024-01-12')
   },
@@ -72,6 +80,8 @@ export const mockJobs: JobPosition[] = [
     id: '5',
     title: 'Administrativo/a',
     description: 'Gestión administrativa, facturación y atención telefónica. Conocimientos de informática.',
+    business: 'Licojerez',
+    city: 'Jerez de la Frontera',
     isActive: true,
     createdAt: new Date('2024-01-18')
   },
@@ -79,6 +89,8 @@ export const mockJobs: JobPosition[] = [
     id: '6',
     title: 'Repartidor/a',
     description: 'Distribución de productos a clientes. Carnet de conducir y vehículo propio necesarios.',
+    business: 'Licojerez',
+    city: 'Jerez de la Frontera',
     isActive: true,
     createdAt: new Date('2024-01-08')
   }
