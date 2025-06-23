@@ -3,6 +3,8 @@ export interface JobPosition {
   id: string;
   title: string;
   description: string;
+  business: string;
+  city: string;
   isActive: boolean;
   createdAt: Date;
 }
@@ -18,6 +20,8 @@ export interface JobApplication {
   sectorExperience: 'Sí' | 'No';
   positionExperience: 'Sí' | 'No';
   availability: 'Inmediata' | '< 1 mes' | '1-3 meses' | '> 3 meses';
+  relevantExperience: string;
+  additionalComments?: string;
   curriculum?: File;
   status: 'received' | 'reviewing' | 'contacted' | 'closed';
   createdAt: Date;
