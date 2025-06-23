@@ -20,7 +20,7 @@ export const businesses: Business[] = [
     name: 'Taberna Jerez',
     address: 'Plaza del Arenal, 6, Jerez de la Frontera',
     description: 'Taberna con más de un siglo de historia, referente en la cultura del vino y la gastronomía jerezana.',
-    imageUrl: '/placeholder.svg',
+    imageUrl: tabernajerez,
     imagePlaceholder: 'Sube imagen'
   },
   {
