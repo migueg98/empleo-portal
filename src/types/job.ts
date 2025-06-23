@@ -2,11 +2,7 @@
 export interface JobPosition {
   id: string;
   title: string;
-  area: string;
-  business: 'Negocio A' | 'Negocio B' | 'Negocio C';
-  city: string;
   description: string;
-  requirements?: string;
   isActive: boolean;
   createdAt: Date;
 }
@@ -15,11 +11,14 @@ export interface JobApplication {
   id: string;
   jobId: string;
   fullName: string;
+  age: number;
   email: string;
   phone: string;
-  relevantExperience: string;
-  availability: string;
-  additionalComments: string;
+  selectedPositions: string[];
+  sectorExperience: 'Sí' | 'No';
+  positionExperience: 'Sí' | 'No';
+  availability: 'Inmediata' | '< 1 mes' | '1-3 meses' | '> 3 meses';
+  curriculum?: File;
   status: 'received' | 'reviewing' | 'contacted' | 'closed';
   createdAt: Date;
   updatedAt: Date;
@@ -32,4 +31,12 @@ export interface Candidate {
   fullName: string;
   applications: JobApplication[];
   createdAt: Date;
+}
+
+export interface Business {
+  id: string;
+  name: string;
+  address: string;
+  description: string;
+  imageUrl?: string;
 }

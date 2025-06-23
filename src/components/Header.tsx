@@ -1,5 +1,5 @@
 
-import { Building2 } from 'lucide-react';
+import { Utensils } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Header = () => {
@@ -10,8 +10,8 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <Building2 size={32} />
-            <span className="text-xl font-bold">[NOMBRE DE EMPRESA]</span>
+            <Utensils size={32} />
+            <span className="text-xl font-bold">Bolsa de Trabajo</span>
           </Link>
           
           <nav className="hidden md:flex space-x-6">
@@ -30,6 +30,14 @@ const Header = () => {
               }`}
             >
               Empleos
+            </Link>
+            <Link 
+              to="/mis-candidaturas" 
+              className={`text-sm font-medium hover:text-accent transition-colors ${
+                location.pathname === '/mis-candidaturas' ? 'text-accent' : ''
+              }`}
+            >
+              Mis Candidaturas
             </Link>
             <Link 
               to="/admin" 

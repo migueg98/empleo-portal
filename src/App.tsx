@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Jobs from "./pages/Jobs";
 import JobApplication from "./pages/JobApplication";
+import CandidatePortal from "./pages/CandidatePortal";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/empleos" element={<Jobs />} />
           <Route path="/postular/:jobId" element={<JobApplication />} />
+          <Route path="/mis-candidaturas" element={<CandidatePortal />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

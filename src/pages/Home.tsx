@@ -1,26 +1,15 @@
 
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import BusinessFilter from '@/components/BusinessFilter';
+import BusinessCard from '@/components/BusinessCard';
 import JobCard from '@/components/JobCard';
 import { Button } from '@/components/ui/button';
-import { mockJobs } from '@/data/mockJobs';
-import { Users, Target, TrendingUp, ArrowRight } from 'lucide-react';
+import { mockJobs, businesses } from '@/data/mockJobs';
+import { Users, Heart, Wine, ArrowRight } from 'lucide-react';
 
 const Home = () => {
-  const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null);
-
-  const filteredJobs = selectedBusiness 
-    ? mockJobs.filter(job => job.business === selectedBusiness).slice(0, 3)
-    : mockJobs.slice(0, 3);
-
-  const businessDescriptions = {
-    'Negocio A': 'Innovación tecnológica y desarrollo de software de vanguardia.',
-    'Negocio B': 'Estrategias de marketing digital y experiencia del cliente.',
-    'Negocio C': 'Consultoría empresarial y optimización de procesos.'
-  };
+  const featuredJobs = mockJobs.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-white">
@@ -33,7 +22,7 @@ const Home = () => {
             Únete a Nuestro Equipo
           </h1>
           <p className="text-xl md:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
-            Descubre oportunidades profesionales en una empresa líder en innovación y crecimiento
+            Forma parte de la tradición hostelera de Jerez de la Frontera
           </p>
           <Link to="/empleos">
             <Button 
@@ -51,63 +40,79 @@ const Home = () => {
       <section className="py-16 bg-gray-50" id="quienes-somos">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
               Quiénes Somos
             </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Somos una empresa comprometida con la excelencia, la innovación y el desarrollo 
-              profesional de nuestros colaboradores. Nuestras tres líneas de negocio nos 
-              posicionan como líderes en el mercado.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="text-accent" size={32} />
+            <div className="max-w-4xl mx-auto">
+              <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+                Somos un grupo hostelero nacido en Jerez de la Frontera. Gestionamos cuatro tabancos 
+                de tradición centenaria y una distribuidora de bebidas:
+              </p>
+              <div className="grid md:grid-cols-3 gap-4 text-primary font-medium mb-6">
+                <div className="flex items-center justify-center gap-2">
+                  <Wine size={20} />
+                  <span>Tabanco Las Banderillas</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Wine size={20} />
+                  <span>Taberna Jerez</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Wine size={20} />
+                  <span>Tabanco San Pablo</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Users size={20} />
+                  <span>Restaurante Mareal</span>
+                </div>
+                <div className="flex items-center justify-center gap-2 md:col-span-2">
+                  <Heart size={20} />
+                  <span>Licojerez (distribuidora de vinos y licores)</span>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Negocio A</h3>
-              <p className="text-gray-600">{businessDescriptions['Negocio A']}</p>
-            </div>
-            
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="text-accent" size={32} />
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Negocio B</h3>
-              <p className="text-gray-600">{businessDescriptions['Negocio B']}</p>
-            </div>
-            
-            <div className="text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="text-accent" size={32} />
-              </div>
-              <h3 className="text-xl font-semibold text-primary mb-3">Negocio C</h3>
-              <p className="text-gray-600">{businessDescriptions['Negocio C']}</p>
+              <p className="text-lg text-gray-700 leading-relaxed">
+                Nuestra misión es ofrecer auténtica gastronomía jerezana y un servicio cercano, 
+                tanto en sala como en distribución.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Filter Section */}
-      <section className="py-12 bg-white">
+      {/* Business Section */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-              Explora Oportunidades por Área de Negocio
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+              Nuestros Negocios
             </h2>
-            <p className="text-gray-600 mb-6">
-              Filtra las posiciones según la línea de negocio que más te interese
+            <p className="text-lg text-gray-600">
+              Conoce los establecimientos que forman nuestro grupo hostelero
             </p>
-            <BusinessFilter 
-              selectedBusiness={selectedBusiness}
-              onBusinessChange={setSelectedBusiness}
-            />
           </div>
 
-          {/* Featured Jobs */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {filteredJobs.map((job) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {businesses.map((business) => (
+              <BusinessCard key={business.id} business={business} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Jobs */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+              Últimas Oportunidades
+            </h2>
+            <p className="text-lg text-gray-600">
+              Descubre las posiciones abiertas en nuestro grupo
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredJobs.map((job) => (
               <JobCard key={job.id} job={job} />
             ))}
           </div>

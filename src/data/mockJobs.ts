@@ -1,71 +1,85 @@
 
-import { JobPosition } from '@/types/job';
+import { JobPosition, Business } from '@/types/job';
+
+export const businesses: Business[] = [
+  {
+    id: '1',
+    name: 'Tabanco Las Banderillas',
+    address: 'Calle Cabezas, 10, Jerez de la Frontera',
+    description: 'Tabanco tradicional en el corazón del casco histórico, especializado en vinos de Jerez y tapas auténticas.',
+    imageUrl: '/placeholder.svg'
+  },
+  {
+    id: '2',
+    name: 'Taberna Jerez',
+    address: 'Plaza del Arenal, 3, Jerez de la Frontera',
+    description: 'Taberna con más de un siglo de historia, referente en la cultura del vino y la gastronomía jerezana.',
+    imageUrl: '/placeholder.svg'
+  },
+  {
+    id: '3',
+    name: 'Tabanco San Pablo',
+    address: 'Calle San Pablo, 8, Jerez de la Frontera',
+    description: 'Espacio tradicional donde se respira la esencia del flamenco y los vinos generosos.',
+    imageUrl: '/placeholder.svg'
+  },
+  {
+    id: '4',
+    name: 'Restaurante Mareal',
+    address: 'Avenida del Mar, 15, Jerez de la Frontera',
+    description: 'Restaurante de alta cocina marinera con productos frescos del golfo de Cádiz.',
+    imageUrl: '/placeholder.svg'
+  },
+  {
+    id: '5',
+    name: 'Licojerez',
+    address: 'Polígono Industrial El Portal, Nave 12, Jerez de la Frontera',
+    description: 'Distribuidora especializada en vinos de Jerez, licores y bebidas premium para hostelería.',
+    imageUrl: '/placeholder.svg'
+  }
+];
 
 export const mockJobs: JobPosition[] = [
   {
     id: '1',
-    title: 'Desarrollador Frontend Senior',
-    area: 'Tecnología',
-    business: 'Negocio A',
-    city: 'Madrid',
-    description: 'Buscamos un desarrollador frontend con experiencia en React y TypeScript para liderar proyectos innovadores.',
-    requirements: 'Experiencia mínima de 5 años en desarrollo frontend, conocimiento avanzado de React, TypeScript, y metodologías ágiles.',
+    title: 'Camarero/a de Sala',
+    description: 'Atención al cliente en tabanco tradicional. Conocimiento de vinos de Jerez valorado.',
     isActive: true,
     createdAt: new Date('2024-01-15')
   },
   {
     id: '2',
-    title: 'Especialista en Marketing Digital',
-    area: 'Marketing',
-    business: 'Negocio B',
-    city: 'Barcelona',
-    description: 'Profesional creativo para gestionar campañas digitales y estrategias de marketing online.',
-    requirements: 'Titulación en Marketing o similar, experiencia en Google Ads, Facebook Ads, y analítica digital.',
+    title: 'Cocinero/a',
+    description: 'Preparación de tapas tradicionales y platos de la casa. Experiencia en cocina andaluza.',
+    isActive: true,
+    createdAt: new Date('2024-01-10')
+  },
+  {
+    id: '3',
+    title: 'Ayudante de Cocina',
+    description: 'Apoyo en cocina, preparación de ingredientes y mantenimiento del área de trabajo.',
     isActive: true,
     createdAt: new Date('2024-01-20')
   },
   {
-    id: '3',
-    title: 'Analista de Datos',
-    area: 'Análisis',
-    business: 'Negocio C',
-    city: 'Valencia',
-    description: 'Analista para trabajar con grandes volúmenes de datos y generar insights estratégicos.',
-    requirements: 'Conocimientos en SQL, Python, Power BI y estadística aplicada.',
-    isActive: true,
-    createdAt: new Date('2024-01-25')
-  },
-  {
     id: '4',
-    title: 'Gerente de Ventas',
-    area: 'Ventas',
-    business: 'Negocio A',
-    city: 'Sevilla',
-    description: 'Liderazgo del equipo comercial y desarrollo de estrategias de ventas B2B.',
-    requirements: 'Experiencia mínima de 7 años en ventas B2B, habilidades de liderazgo y gestión de equipos.',
+    title: 'Barman/Barmaid',
+    description: 'Preparación de cócteles y bebidas. Conocimiento en vinos y licores de la zona.',
     isActive: true,
-    createdAt: new Date('2024-02-01')
+    createdAt: new Date('2024-01-12')
   },
   {
     id: '5',
-    title: 'Diseñador UX/UI',
-    area: 'Diseño',
-    business: 'Negocio B',
-    city: 'Bilbao',
-    description: 'Diseñador para crear experiencias de usuario excepcionales en productos digitales.',
-    requirements: 'Portfolio sólido, experiencia con Figma, conocimientos de investigación UX y diseño de sistemas.',
+    title: 'Administrativo/a',
+    description: 'Gestión administrativa, facturación y atención telefónica. Conocimientos de informática.',
     isActive: true,
-    createdAt: new Date('2024-02-05')
+    createdAt: new Date('2024-01-18')
   },
   {
     id: '6',
-    title: 'Consultor de Procesos',
-    area: 'Consultoría',
-    business: 'Negocio C',
-    city: 'Zaragoza',
-    description: 'Optimización de procesos empresariales y implementación de mejoras operativas.',
-    requirements: 'Formación en ingeniería o administración, certificaciones Lean Six Sigma preferibles.',
+    title: 'Repartidor/a',
+    description: 'Distribución de productos a clientes. Carnet de conducir y vehículo propio necesarios.',
     isActive: true,
-    createdAt: new Date('2024-02-10')
+    createdAt: new Date('2024-01-08')
   }
 ];
