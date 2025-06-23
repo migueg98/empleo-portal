@@ -1,5 +1,10 @@
 
 import { JobPosition, Business, JobVacancy } from '@/types/job';
+import banderillas from '@/assets/Banderillas.jpg';
+import tabernajerez from '@/assets/Tabernajerez.jpg';
+import sanpablo from '@/assets/SanPablo.jpg';
+import mareal from '@/assets/Mareal.jpg';
+import licojerez from '@/assets/Licojerez.jpg';
 
 export const businesses: Business[] = [
   {
@@ -7,7 +12,7 @@ export const businesses: Business[] = [
     name: 'Tabanco Las Banderillas',
     address: 'Calle Caballeros, 12, Jerez de la Frontera',
     description: 'Tabanco tradicional en el corazón del casco histórico, especializado en vinos de Jerez y tapas auténticas.',
-    imageUrl: 'src/data/mockJobs.ts src/assets/Banderillas.jpg',
+    imageUrl: 'banderillas',
     imagePlaceholder: 'Sube imagen'
   },
   {
