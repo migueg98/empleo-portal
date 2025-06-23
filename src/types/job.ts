@@ -9,6 +9,15 @@ export interface JobPosition {
   createdAt: Date;
 }
 
+export interface JobVacancy {
+  id: string;
+  sector: string;
+  puesto: string;
+  descripcion: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
 export interface JobApplication {
   id: string;
   jobId: string;
@@ -43,4 +52,5 @@ export interface Business {
   address: string;
   description: string;
   imageUrl?: string;
+  imagePlaceholder: string;
 }

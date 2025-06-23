@@ -2,17 +2,20 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import JobCard from '@/components/JobCard';
+import VacancyCard from '@/components/VacancyCard';
 import { Input } from '@/components/ui/input';
-import { mockJobs } from '@/data/mockJobs';
+import { mockVacancies } from '@/data/mockJobs';
 import { Search } from 'lucide-react';
 
 const Jobs = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredJobs = mockJobs.filter(job => 
-    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const activeVacancies = mockVacancies.filter(vacancy => vacancy.isActive);
+  
+  const filteredVacancies = activeVacancies.filter(vacancy => 
+    vacancy.puesto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vacancy.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vacancy.sector.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -31,7 +34,7 @@ const Jobs = () => {
           <div className="max-w-md mx-auto relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <Input
-              placeholder="Buscar por puesto o descripción..."
+              placeholder="Buscar por puesto, sector o descripción..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -41,11 +44,11 @@ const Jobs = () => {
         </div>
 
         {/* Jobs Grid */}
-        {filteredJobs.length > 0 ? (
+        {filteredVacancies.length > 0 ? (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {filteredJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
+              {filteredVacancies.map((vacancy) => (
+                <VacancyCard key={vacancy.id} vacancy={vacancy} />
               ))}
             </div>
             

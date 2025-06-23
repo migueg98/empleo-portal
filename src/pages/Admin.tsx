@@ -3,13 +3,15 @@ import { useState, useMemo } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import KanbanBoard from '@/components/admin/KanbanBoard';
+import VacancyManagement from '@/components/admin/VacancyManagement';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JobApplication } from '@/types/job';
 import { mockJobs } from '@/data/mockJobs';
-import { Search, Users, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Users, Clock, CheckCircle, XCircle, Briefcase } from 'lucide-react';
 
 // Mock data for applications
 const mockApplications: JobApplication[] = [
@@ -142,140 +144,159 @@ const Admin = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-primary mb-2">Panel de Administración - RRHH</h1>
           <p className="text-gray-600">
-            Gestiona las postulaciones recibidas y el proceso de selección
+            Gestiona las postulaciones recibidas y las vacantes disponibles
           </p>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Users size={16} />
-                Total
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">{statistics.total}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Clock size={16} />
-                Recibidos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{statistics.received}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{statistics.reviewing}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <CheckCircle size={16} />
-                Contactados
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{statistics.contacted}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <XCircle size={16} />
-                Cerrados
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-600">{statistics.closed}</div>
-            </CardContent>
-          </Card>
-        </div>
+        <Tabs defaultValue="applications" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="applications" className="flex items-center gap-2">
+              <Users size={16} />
+              Postulaciones
+            </TabsTrigger>
+            <TabsTrigger value="vacancies" className="flex items-center gap-2">
+              <Briefcase size={16} />
+              Gestión de Vacantes
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Filtros de Búsqueda</CardTitle>
-            <CardDescription>
-              Utiliza los filtros para encontrar postulaciones específicas
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                <Input
-                  placeholder="Buscar por nombre, email o puesto..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
+          <TabsContent value="applications" className="space-y-6">
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Users size={16} />
+                    Total
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">{statistics.total}</div>
+                </CardContent>
+              </Card>
               
-              <Select value={selectedJob} onValueChange={setSelectedJob}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos los puestos" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border shadow-md">
-                  <SelectItem value="all">Todos los puestos</SelectItem>
-                  {mockJobs.map((job) => (
-                    <SelectItem key={job.id} value={job.id}>{job.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Clock size={16} />
+                    Recibidos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">{statistics.received}</div>
+                </CardContent>
+              </Card>
               
-              <Select value={selectedBusiness} onValueChange={setSelectedBusiness}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos los negocios" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border shadow-md">
-                  <SelectItem value="all">Todos los negocios</SelectItem>
-                  {businesses.map((business) => (
-                    <SelectItem key={business} value={business}>{business}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-600">{statistics.reviewing}</div>
+                </CardContent>
+              </Card>
               
-              <Select value={selectedCity} onValueChange={setSelectedCity}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas las ciudades" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border shadow-md">
-                  <SelectItem value="all">Todas las ciudades</SelectItem>
-                  {cities.map((city) => (
-                    <SelectItem key={city} value={city}>{city}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <CheckCircle size={16} />
+                    Contactados
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{statistics.contacted}</div>
+                </CardContent>
+              </Card>
               
-              <div className="flex items-center">
-                <Badge variant="secondary">
-                  {filteredApplications.length} resultado{filteredApplications.length !== 1 ? 's' : ''}
-                </Badge>
-              </div>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <XCircle size={16} />
+                    Cerrados
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-gray-600">{statistics.closed}</div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Kanban Board */}
-        <KanbanBoard 
-          applications={filteredApplications}
-          onStatusChange={handleStatusChange}
-        />
+            {/* Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Filtros de Búsqueda</CardTitle>
+                <CardDescription>
+                  Utiliza los filtros para encontrar postulaciones específicas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <Input
+                      placeholder="Buscar por nombre, email o puesto..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  
+                  <Select value={selectedJob} onValueChange={setSelectedJob}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos los puestos" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-md">
+                      <SelectItem value="all">Todos los puestos</SelectItem>
+                      {mockJobs.map((job) => (
+                        <SelectItem key={job.id} value={job.id}>{job.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={selectedBusiness} onValueChange={setSelectedBusiness}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos los negocios" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-md">
+                      <SelectItem value="all">Todos los negocios</SelectItem>
+                      {businesses.map((business) => (
+                        <SelectItem key={business} value={business}>{business}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={selectedCity} onValueChange={setSelectedCity}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todas las ciudades" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-md">
+                      <SelectItem value="all">Todas las ciudades</SelectItem>
+                      {cities.map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="flex items-center">
+                    <Badge variant="secondary">
+                      {filteredApplications.length} resultado{filteredApplications.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Kanban Board */}
+            <KanbanBoard 
+              applications={filteredApplications}
+              onStatusChange={handleStatusChange}
+            />
+          </TabsContent>
+
+          <TabsContent value="vacancies">
+            <VacancyManagement />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Footer />
