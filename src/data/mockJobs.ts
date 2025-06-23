@@ -1,8 +1,8 @@
 
 import { JobPosition, Business, JobVacancy } from '@/types/job';
-import banderillas from '@/Banderillas.jpg';
+import banderillas from '/Banderillas.jpg';
 import tabernajerez from '@/assets/Tabernajerez.jpg';
-import sanpablo from '@/assets/SanPablo.jpg';
+import sanpablo from '/assets/SanPablo.jpg';
 import mareal from '@/assets/Mareal.jpg';
 import licojerez from '@/assets/Licojerez.jpg';
 
@@ -28,7 +28,7 @@ export const businesses: Business[] = [
     name: 'Tabanco San Pablo',
     address: 'Calle San Pablo, 12, Jerez de la Frontera',
     description: 'Espacio tradicional donde se respira la esencia del flamenco y los vinos generosos.',
-    imageUrl: '/placeholder.svg',
+    imageUrl: sanpablo,
     imagePlaceholder: 'Sube imagen'
   },
   {
