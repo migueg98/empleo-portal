@@ -5,35 +5,35 @@ export const businesses: Business[] = [
   {
     id: '1',
     name: 'Tabanco Las Banderillas',
-    address: 'Calle Cabezas, 10, Jerez de la Frontera',
+    address: 'Calle Caballeros, 12, Jerez de la Frontera',
     description: 'Tabanco tradicional en el corazón del casco histórico, especializado en vinos de Jerez y tapas auténticas.',
     imageUrl: '/placeholder.svg'
   },
   {
     id: '2',
     name: 'Taberna Jerez',
-    address: 'Plaza del Arenal, 3, Jerez de la Frontera',
+    address: 'Plaza del Arenal, 6, Jerez de la Frontera',
     description: 'Taberna con más de un siglo de historia, referente en la cultura del vino y la gastronomía jerezana.',
     imageUrl: '/placeholder.svg'
   },
   {
     id: '3',
     name: 'Tabanco San Pablo',
-    address: 'Calle San Pablo, 8, Jerez de la Frontera',
+    address: 'Calle San Pablo, 12, Jerez de la Frontera',
     description: 'Espacio tradicional donde se respira la esencia del flamenco y los vinos generosos.',
     imageUrl: '/placeholder.svg'
   },
   {
     id: '4',
     name: 'Restaurante Mareal',
-    address: 'Avenida del Mar, 15, Jerez de la Frontera',
+    address: 'Plaza del Arenal, 2, Jerez de la Frontera',
     description: 'Restaurante de alta cocina marinera con productos frescos del golfo de Cádiz.',
     imageUrl: '/placeholder.svg'
   },
   {
     id: '5',
     name: 'Licojerez',
-    address: 'Polígono Industrial El Portal, Nave 12, Jerez de la Frontera',
+    address: 'Calle Cordoba, 22, Jerez de la Frontera',
     description: 'Distribuidora especializada en vinos de Jerez, licores y bebidas premium para hostelería.',
     imageUrl: '/placeholder.svg'
   }
