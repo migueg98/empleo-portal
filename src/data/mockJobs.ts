@@ -7,7 +7,7 @@ export const businesses: Business[] = [
     name: 'Tabanco Las Banderillas',
     address: 'Calle Caballeros, 12, Jerez de la Frontera',
     description: 'Tabanco tradicional en el corazón del casco histórico, especializado en vinos de Jerez y tapas auténticas.',
-    imageUrl: '/placeholder.svg',
+    imageUrl: 'src/data/mockJobs.ts src/assets/Banderillas.jpg',
     imagePlaceholder: 'Sube imagen'
   },
   {
