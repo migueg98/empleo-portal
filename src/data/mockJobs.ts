@@ -1,7 +1,7 @@
 
 import { JobPosition, Business, JobVacancy } from '@/types/job';
 import banderillas from '/Banderillas.jpg';
-import tabernajerez from '@/assets/Tabernajerez.jpg';
+import tabernajerez from '/assets/Tabernajerez.jpg';
 import sanpablo from '/assets/SanPablo.jpg';
 import mareal from '@/assets/Mareal.jpg';
 import licojerez from '@/assets/Licojerez.jpg';
