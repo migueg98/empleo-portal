@@ -1,9 +1,9 @@
 import { JobPosition, Business, JobVacancy } from '@/types/job';
-import banderillas from '/assets/Banderillas.jpg';
-import tabernajerez from '/assets/Tabernajerez.jpg';
-import sanpablo from '/assets/SanPablo.jpg';
-import mareal from '/assets/Mareal.jpg';
-import licojerez from '/assets/Licojerez.jpg';
+import banderillas from '@/assets/Banderillas.jpg';
+import tabernajerez from '@/assets/Tabernajerez.jpg';
+import sanpablo from '@/assets/SanPablo.jpg';
+import mareal from '@/assets/Mareal.jpg';
+import licojerez from '@/assets/Licojerez.jpg';
 
 export const businesses: Business[] = [
   {
