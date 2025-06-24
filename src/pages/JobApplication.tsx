@@ -15,7 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
 import { JobPosition, JobVacancy } from '@/types/job';
-import { mockJobs, mockVacancies } from '@/data/mockJobs';
+import { mockJobs } from '@/data/mockJobs';
+import { useVacancies } from '@/hooks/useVacancies';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const formSchema = z.object({
@@ -35,9 +36,6 @@ const formSchema = z.object({
   sectorExperience: z.enum(['Sí', 'No']),
   positionExperience: z.enum(['Sí', 'No']),
   availability: z.enum(['Inmediata', '< 1 mes', '1-3 meses', '> 3 meses']),
-  relevantExperience: z.string().min(10, {
-    message: 'Por favor, describe tu experiencia.',
-  }),
   additionalComments: z.string().optional(),
   curriculum: z.any().optional(),
   consentGiven: z.boolean().refine((value) => value === true, {
@@ -51,8 +49,9 @@ const JobApplication = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { jobId } = useParams();
   const navigate = useNavigate();
+  const { vacancies } = useVacancies();
 
-  const selectedJob: JobPosition | JobVacancy | undefined = mockJobs.find(job => job.id === jobId) || mockVacancies.find(vacancy => vacancy.id === jobId);
+  const selectedJob: JobPosition | JobVacancy | undefined = mockJobs.find(job => job.id === jobId) || vacancies.find(vacancy => vacancy.id === jobId);
 
   // Helper function to get the job title regardless of type
   const getJobTitle = (job: JobPosition | JobVacancy) => {
@@ -73,7 +72,6 @@ const JobApplication = () => {
       sectorExperience: 'No',
       positionExperience: 'No',
       availability: 'Inmediata',
-      relevantExperience: '',
       additionalComments: '',
       consentGiven: false,
     },
@@ -228,24 +226,6 @@ const JobApplication = () => {
                         )}
                       />
                     </div>
-
-                    <FormField
-                      control={form.control}
-                      name="relevantExperience"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Experiencia relevante *</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Describe tu experiencia profesional relevante para este puesto..."
-                              className="min-h-20"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
 
                   {/* Availability Section */}
@@ -269,6 +249,29 @@ const JobApplication = () => {
                             <SelectItem value="> 3 meses">Más de 3 meses</SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* CV Upload Section */}
+                  <Separator />
+                  <FormField
+                    control={form.control}
+                    name="curriculum"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Adjuntar CV</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            onChange={(e) => field.onChange(e.target.files?.[0] || null)}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Formato: PDF, DOC o DOCX (máximo 5MB)
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

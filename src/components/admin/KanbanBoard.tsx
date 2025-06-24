@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { JobApplication } from '@/types/job';
 import { mockJobs } from '@/data/mockJobs';
-import { ChevronRight, Mail, Phone, Calendar } from 'lucide-react';
+import { useVacancies } from '@/hooks/useVacancies';
+import { ChevronRight, Mail, Phone, Calendar, Download } from 'lucide-react';
 import {
   DndContext,
   DragEndEvent,
@@ -66,9 +67,28 @@ const SortableApplicationCard = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const { vacancies } = useVacancies();
+  
   const getJobTitle = (jobId: string) => {
     const job = mockJobs.find(j => j.id === jobId);
-    return job?.title || 'Puesto no encontrado';
+    if (job) return job.title;
+    
+    const vacancy = vacancies.find(v => v.id === jobId);
+    return vacancy?.puesto || 'Puesto no encontrado';
+  };
+
+  const handleDownloadCV = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Simulate CV download - in a real app, this would download the actual file
+    const blob = new Blob(['CV simulado para ' + application.fullName], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CV_${application.fullName.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -108,6 +128,15 @@ const SortableApplicationCard = ({
             <Calendar size={12} />
             <span>{new Date(application.createdAt).toLocaleDateString('es-ES')}</span>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-2 text-xs h-6"
+            onClick={handleDownloadCV}
+          >
+            <Download size={10} className="mr-1" />
+            Descargar CV
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -117,6 +146,7 @@ const SortableApplicationCard = ({
 const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const { vacancies } = useVacancies();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -146,10 +176,21 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
     const activeId = active.id as string;
     const overId = over.id as string;
     
-    // Check if we're dropping over a status container
+    // Check if we're dropping over a status container or another card
     const statusKeys = Object.keys(statusLabels) as JobApplication['status'][];
+    let newStatus: JobApplication['status'] | null = null;
+    
     if (statusKeys.includes(overId as JobApplication['status'])) {
-      const newStatus = overId as JobApplication['status'];
+      newStatus = overId as JobApplication['status'];
+    } else {
+      // If dropping over another card, find which status column it belongs to
+      const targetApp = applications.find(app => app.id === overId);
+      if (targetApp) {
+        newStatus = targetApp.status;
+      }
+    }
+    
+    if (newStatus) {
       onStatusChange(activeId, newStatus);
     }
   };
@@ -159,6 +200,28 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   };
 
   const activeApplication = activeId ? applications.find(app => app.id === activeId) : null;
+
+  const getJobTitle = (jobId: string) => {
+    const job = mockJobs.find(j => j.id === jobId);
+    if (job) return job.title;
+    
+    const vacancy = vacancies.find(v => v.id === jobId);
+    return vacancy?.puesto || 'Puesto no encontrado';
+  };
+
+  const handleDownloadCV = (application: JobApplication, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Simulate CV download - in a real app, this would download the actual file
+    const blob = new Blob(['CV simulado para ' + application.fullName], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CV_${application.fullName.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <DndContext 
@@ -209,7 +272,7 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
             <CardContent className="pt-0">
               <div className="space-y-2 text-xs text-gray-600">
                 <p className="font-medium text-primary">
-                  {mockJobs.find(j => j.id === activeApplication.jobId)?.title || 'Puesto no encontrado'}
+                  {getJobTitle(activeApplication.jobId)}
                 </p>
               </div>
             </CardContent>
@@ -226,7 +289,7 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
                 <div>
                   <CardTitle>{selectedApplication.fullName}</CardTitle>
                   <p className="text-sm text-gray-600 mt-1">
-                    {mockJobs.find(j => j.id === selectedApplication.jobId)?.title || 'Puesto no encontrado'}
+                    {getJobTitle(selectedApplication.jobId)}
                   </p>
                 </div>
                 <Button 
@@ -251,13 +314,6 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
               </div>
               
               <div>
-                <p className="text-sm font-medium mb-1">Experiencia Relevante:</p>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                  {selectedApplication.relevantExperience}
-                </p>
-              </div>
-              
-              <div>
                 <p className="text-sm font-medium">Disponibilidad:</p>
                 <p className="text-sm text-gray-600">{selectedApplication.availability}</p>
               </div>
@@ -270,6 +326,16 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
                   </p>
                 </div>
               )}
+              
+              <div className="flex justify-center">
+                <Button
+                  onClick={(e) => handleDownloadCV(selectedApplication, e)}
+                  className="flex items-center gap-2"
+                >
+                  <Download size={16} />
+                  Descargar CV
+                </Button>
+              </div>
               
               <div className="text-xs text-gray-500 pt-2 border-t">
                 <p>Postulación recibida: {new Date(selectedApplication.createdAt).toLocaleString('es-ES')}</p>
