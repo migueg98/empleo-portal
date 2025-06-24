@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -11,14 +10,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { mockJobs } from '@/data/mockJobs';
-import { JobPosition } from '@/types/job';
+import { mockJobs, mockVacancies } from '@/data/mockJobs';
+import { JobPosition, JobVacancy } from '@/types/job';
 import { ArrowLeft, Upload } from 'lucide-react';
 
 const JobApplication = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const [job, setJob] = useState<JobPosition | null>(null);
+  const [vacancy, setVacancy] = useState<JobVacancy | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -44,11 +44,20 @@ const JobApplication = () => {
   ];
 
   useEffect(() => {
+    // First try to find a job position
     const foundJob = mockJobs.find(j => j.id === jobId);
     if (foundJob) {
       setJob(foundJob);
+      setVacancy(null);
     } else {
-      navigate('/empleos');
+      // If not found, try to find a vacancy
+      const foundVacancy = mockVacancies.find(v => v.id === jobId);
+      if (foundVacancy) {
+        setVacancy(foundVacancy);
+        setJob(null);
+      } else {
+        navigate('/empleos');
+      }
     }
   }, [jobId, navigate]);
 
@@ -162,9 +171,13 @@ const JobApplication = () => {
     }
   };
 
-  if (!job) {
+  if (!job && !vacancy) {
     return <div>Cargando...</div>;
   }
+
+  const currentPosition = job || vacancy;
+  const positionTitle = job ? job.title : vacancy?.puesto || '';
+  const positionDescription = job ? job.description : vacancy?.descripcion || '';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -186,11 +199,16 @@ const JobApplication = () => {
             <div className="lg:col-span-1">
               <Card className="sticky top-4">
                 <CardHeader>
-                  <CardTitle className="text-primary">{job.title}</CardTitle>
+                  <CardTitle className="text-primary">{positionTitle}</CardTitle>
+                  {vacancy && (
+                    <div className="text-sm text-gray-600 font-medium">
+                      {vacancy.sector}
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-sm">
-                    {job.description}
+                    {positionDescription}
                   </CardDescription>
                 </CardContent>
               </Card>

@@ -11,7 +11,11 @@ const BusinessCard = ({ business }: BusinessCardProps) => {
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200 h-full">
       <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden flex items-center justify-center border-b">
-        <img src={business.imageUrl}  /> 
+        <img 
+          src={business.imageUrl} 
+          alt={business.name}
+          className="w-full h-full object-cover"
+        /> 
       </div>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg text-primary">{business.name}</CardTitle>

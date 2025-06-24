@@ -1,10 +1,9 @@
-
 import { JobPosition, Business, JobVacancy } from '@/types/job';
-import banderillas from '/Banderillas.jpg';
+import banderillas from '/assets/Banderillas.jpg';
 import tabernajerez from '/assets/Tabernajerez.jpg';
 import sanpablo from '/assets/SanPablo.jpg';
-import mareal from '@/assets/Mareal.jpg';
-import licojerez from '@/assets/Licojerez.jpg';
+import mareal from '/assets/Mareal.jpg';
+import licojerez from '/assets/Licojerez.jpg';
 
 export const businesses: Business[] = [
   {
@@ -36,7 +35,7 @@ export const businesses: Business[] = [
     name: 'Restaurante Mareal',
     address: 'Plaza del Arenal, 2, Jerez de la Frontera',
     description: 'Restaurante de alta cocina marinera con productos frescos del golfo de Cádiz.',
-    imageUrl: '/placeholder.svg',
+    imageUrl: mareal,
     imagePlaceholder: 'Sube imagen'
   },
   {
@@ -44,7 +43,7 @@ export const businesses: Business[] = [
     name: 'Licojerez',
     address: 'Calle Cordoba, 22, Jerez de la Frontera',
     description: 'Distribuidora especializada en vinos de Jerez, licores y bebidas premium para hostelería.',
-    imageUrl: '/placeholder.svg',
+    imageUrl: licojerez,
     imagePlaceholder: 'Sube imagen'
   }
 ];
