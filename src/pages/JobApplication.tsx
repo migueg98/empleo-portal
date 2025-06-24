@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,6 +54,15 @@ const JobApplication = () => {
 
   const selectedJob: JobPosition | JobVacancy | undefined = mockJobs.find(job => job.id === jobId) || mockVacancies.find(vacancy => vacancy.id === jobId);
 
+  // Helper function to get the job title regardless of type
+  const getJobTitle = (job: JobPosition | JobVacancy) => {
+    if ('title' in job) {
+      return job.title; // JobPosition
+    } else {
+      return job.puesto; // JobVacancy
+    }
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -91,7 +101,7 @@ const JobApplication = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-primary mb-2">Solicitud de Empleo</h1>
             <p className="text-gray-600">
-              {selectedJob ? `Postulándote para: ${selectedJob.title || selectedJob.puesto}` : 'Completa el formulario para postularte'}
+              {selectedJob ? `Postulándote para: ${getJobTitle(selectedJob)}` : 'Completa el formulario para postularte'}
             </p>
           </div>
 
