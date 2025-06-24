@@ -4,13 +4,14 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import VacancyCard from '@/components/VacancyCard';
 import { Input } from '@/components/ui/input';
-import { mockVacancies } from '@/data/mockJobs';
 import { Search } from 'lucide-react';
+import { useVacancies } from '@/hooks/useVacancies';
 
 const Jobs = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { vacancies } = useVacancies();
 
-  const activeVacancies = mockVacancies.filter(vacancy => vacancy.isActive);
+  const activeVacancies = vacancies.filter(vacancy => vacancy.isActive);
   
   const filteredVacancies = activeVacancies.filter(vacancy => 
     vacancy.puesto.toLowerCase().includes(searchTerm.toLowerCase()) ||

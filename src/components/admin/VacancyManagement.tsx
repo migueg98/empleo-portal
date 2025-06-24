@@ -1,44 +1,35 @@
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { JobVacancy } from '@/types/job';
-import { mockVacancies } from '@/data/mockJobs';
 import VacancyForm from './VacancyForm';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useVacancies } from '@/hooks/useVacancies';
 
 const VacancyManagement = () => {
-  const [vacancies, setVacancies] = useState<JobVacancy[]>(mockVacancies);
+  const { vacancies, addVacancy, updateVacancy, deleteVacancy } = useVacancies();
   const [showForm, setShowForm] = useState(false);
   const [editingVacancy, setEditingVacancy] = useState<JobVacancy | null>(null);
 
   const handleCreateVacancy = (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
-    const newVacancy: JobVacancy = {
-      ...vacancyData,
-      id: Date.now().toString(),
-      createdAt: new Date()
-    };
-    setVacancies([...vacancies, newVacancy]);
+    addVacancy(vacancyData);
     setShowForm(false);
   };
 
   const handleEditVacancy = (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
     if (!editingVacancy) return;
     
-    setVacancies(vacancies.map(v => 
-      v.id === editingVacancy.id 
-        ? { ...editingVacancy, ...vacancyData }
-        : v
-    ));
+    updateVacancy(editingVacancy.id, vacancyData);
     setEditingVacancy(null);
     setShowForm(false);
   };
 
   const handleDeleteVacancy = (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar esta vacante?')) {
-      setVacancies(vacancies.filter(v => v.id !== id));
+      deleteVacancy(id);
     }
   };
 

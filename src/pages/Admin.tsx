@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -93,8 +92,8 @@ const Admin = () => {
   const [applications, setApplications] = useState<JobApplication[]>(mockApplications);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJob, setSelectedJob] = useState<string>('all');
-  const [selectedBusiness, setSelectedBusiness] = useState<string>('all');
-  const [selectedCity, setSelectedCity] = useState<string>('all');
+  const [selectedSectorExperience, setSelectedSectorExperience] = useState<string>('all');
+  const [selectedPositionExperience, setSelectedPositionExperience] = useState<string>('all');
 
   const filteredApplications = useMemo(() => {
     return applications.filter(app => {
@@ -106,12 +105,12 @@ const Admin = () => {
         (job?.title.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesJob = selectedJob === 'all' || app.jobId === selectedJob;
-      const matchesBusiness = selectedBusiness === 'all' || job?.business === selectedBusiness;
-      const matchesCity = selectedCity === 'all' || job?.city === selectedCity;
+      const matchesSectorExperience = selectedSectorExperience === 'all' || app.sectorExperience === selectedSectorExperience;
+      const matchesPositionExperience = selectedPositionExperience === 'all' || app.positionExperience === selectedPositionExperience;
       
-      return matchesSearch && matchesJob && matchesBusiness && matchesCity;
+      return matchesSearch && matchesJob && matchesSectorExperience && matchesPositionExperience;
     });
-  }, [applications, searchTerm, selectedJob, selectedBusiness, selectedCity]);
+  }, [applications, searchTerm, selectedJob, selectedSectorExperience, selectedPositionExperience]);
 
   const handleStatusChange = (applicationId: string, newStatus: JobApplication['status']) => {
     setApplications(prev => 
@@ -132,9 +131,6 @@ const Admin = () => {
     
     return { total, received, reviewing, contacted, closed };
   }, [applications]);
-
-  const businesses = ['Tabanco Las Banderillas', 'Taberna Jerez', 'Tabanco San Pablo', 'Restaurante Mareal', 'Licojerez'];
-  const cities = [...new Set(mockJobs.map(job => job.city))].sort();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -234,7 +230,7 @@ const Admin = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <Input
-                      placeholder="Buscar por nombre, email o puesto..."
+                      placeholder="Buscar por nombre, email..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-9"
@@ -243,7 +239,7 @@ const Admin = () => {
                   
                   <Select value={selectedJob} onValueChange={setSelectedJob}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Todos los puestos" />
+                      <SelectValue placeholder="Puesto" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border shadow-md">
                       <SelectItem value="all">Todos los puestos</SelectItem>
@@ -253,27 +249,25 @@ const Admin = () => {
                     </SelectContent>
                   </Select>
                   
-                  <Select value={selectedBusiness} onValueChange={setSelectedBusiness}>
+                  <Select value={selectedSectorExperience} onValueChange={setSelectedSectorExperience}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Todos los negocios" />
+                      <SelectValue placeholder="Experiencia en el sector" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border shadow-md">
-                      <SelectItem value="all">Todos los negocios</SelectItem>
-                      {businesses.map((business) => (
-                        <SelectItem key={business} value={business}>{business}</SelectItem>
-                      ))}
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="Sí">Sí</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
                     </SelectContent>
                   </Select>
                   
-                  <Select value={selectedCity} onValueChange={setSelectedCity}>
+                  <Select value={selectedPositionExperience} onValueChange={setSelectedPositionExperience}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Todas las ciudades" />
+                      <SelectValue placeholder="Experiencia en el puesto" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border shadow-md">
-                      <SelectItem value="all">Todas las ciudades</SelectItem>
-                      {cities.map((city) => (
-                        <SelectItem key={city} value={city}>{city}</SelectItem>
-                      ))}
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="Sí">Sí</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
                     </SelectContent>
                   </Select>
                   

@@ -1,419 +1,320 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
-import { mockJobs, mockVacancies } from '@/data/mockJobs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Separator } from "@/components/ui/separator"
 import { JobPosition, JobVacancy } from '@/types/job';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { mockJobs, mockVacancies } from '@/data/mockJobs';
+import { useParams, useNavigate } from 'react-router-dom';
+
+const formSchema = z.object({
+  fullName: z.string().min(2, {
+    message: 'El nombre debe tener al menos 2 caracteres.',
+  }),
+  age: z.number().min(18, {
+    message: 'Debes ser mayor de 18 años.',
+  }),
+  email: z.string().email({
+    message: 'Por favor, introduce un email válido.',
+  }),
+  phone: z.string().min(9, {
+    message: 'Por favor, introduce un número de teléfono válido.',
+  }),
+  selectedPositions: z.array(z.string()).optional(),
+  sectorExperience: z.enum(['Sí', 'No']),
+  positionExperience: z.enum(['Sí', 'No']),
+  availability: z.enum(['Inmediata', '< 1 mes', '1-3 meses', '> 3 meses']),
+  relevantExperience: z.string().min(10, {
+    message: 'Por favor, describe tu experiencia.',
+  }),
+  additionalComments: z.string().optional(),
+  curriculum: z.any().optional(),
+  consentGiven: z.boolean().refine((value) => value === true, {
+    message: 'Debes aceptar el tratamiento de tus datos personales.',
+  }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const JobApplication = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const [job, setJob] = useState<JobPosition | null>(null);
-  const [vacancy, setVacancy] = useState<JobVacancy | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    fullName: '',
-    age: '',
-    email: '',
-    phone: '',
-    selectedPositions: [jobId || ''],
-    sectorExperience: '',
-    positionExperience: '',
-    availability: '',
-    curriculum: null as File | null,
-    consentGiven: false
+
+  const selectedJob: JobPosition | JobVacancy | undefined = mockJobs.find(job => job.id === jobId) || mockVacancies.find(vacancy => vacancy.id === jobId);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      fullName: '',
+      age: 18,
+      email: '',
+      phone: '',
+      sectorExperience: 'No',
+      positionExperience: 'No',
+      availability: 'Inmediata',
+      relevantExperience: '',
+      additionalComments: '',
+      consentGiven: false,
+    },
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const availabilityOptions = [
-    'Inmediata',
-    '< 1 mes',
-    '1-3 meses',
-    '> 3 meses'
-  ];
-
-  useEffect(() => {
-    // First try to find a job position
-    const foundJob = mockJobs.find(j => j.id === jobId);
-    if (foundJob) {
-      setJob(foundJob);
-      setVacancy(null);
-    } else {
-      // If not found, try to find a vacancy
-      const foundVacancy = mockVacancies.find(v => v.id === jobId);
-      if (foundVacancy) {
-        setVacancy(foundVacancy);
-        setJob(null);
-      } else {
-        navigate('/empleos');
-      }
-    }
-  }, [jobId, navigate]);
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'El nombre completo es obligatorio';
-    }
-
-    if (!formData.age.trim()) {
-      newErrors.age = 'La edad es obligatoria';
-    } else if (parseInt(formData.age) < 16 || parseInt(formData.age) > 65) {
-      newErrors.age = 'La edad debe estar entre 16 y 65 años';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'El email es obligatorio';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Por favor, introduce un email válido';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es obligatorio';
-    }
-
-    if (!formData.sectorExperience) {
-      newErrors.sectorExperience = 'Debes indicar tu experiencia en el sector';
-    }
-
-    if (!formData.positionExperience) {
-      newErrors.positionExperience = 'Debes indicar tu experiencia en el puesto';
-    }
-
-    if (!formData.availability) {
-      newErrors.availability = 'La disponibilidad es obligatoria';
-    }
-
-    if (!formData.curriculum) {
-      newErrors.curriculum = 'Debes adjuntar tu currículum';
-    }
-
-    if (!formData.consentGiven) {
-      newErrors.consentGiven = 'Debes aceptar el tratamiento de datos personales';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+  const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    try {
-      // Simular envío de formulario
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
-        title: "¡Postulación enviada correctamente!",
-        description: "Te hemos enviado un email de confirmación con un enlace para gestionar tus candidaturas.",
-        duration: 6000,
-      });
+    console.log('Form values submitted:', values);
+    alert('¡Formulario enviado con éxito!');
+    navigate('/mis-candidaturas');
 
-      console.log('Creando cuenta passwordless para:', formData.email);
-      console.log('Enviando magic-link a:', formData.email);
-      console.log('Enviando notificación a RR.HH.');
-
-      navigate('/empleos');
-      
-    } catch (error) {
-      toast({
-        title: "Error al enviar la postulación",
-        description: "Ha ocurrido un error. Por favor, inténtalo de nuevo.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsSubmitting(false);
   };
-
-  const handleInputChange = (field: string, value: string | boolean | File | null) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validar tipo de archivo
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!allowedTypes.includes(file.type)) {
-        setErrors(prev => ({ ...prev, curriculum: 'Solo se permiten archivos PDF o DOCX' }));
-        return;
-      }
-      
-      // Validar tamaño (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({ ...prev, curriculum: 'El archivo no puede superar los 5MB' }));
-        return;
-      }
-      
-      handleInputChange('curriculum', file);
-    }
-  };
-
-  if (!job && !vacancy) {
-    return <div>Cargando...</div>;
-  }
-
-  const currentPosition = job || vacancy;
-  const positionTitle = job ? job.title : vacancy?.puesto || '';
-  const positionDescription = job ? job.description : vacancy?.descripcion || '';
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/empleos')}
-          className="mb-6 hover:bg-gray-100"
-        >
-          <ArrowLeft size={16} className="mr-2" />
-          Volver a empleos
-        </Button>
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-primary mb-2">Solicitud de Empleo</h1>
+            <p className="text-gray-600">
+              {selectedJob ? `Postulándote para: ${selectedJob.title || selectedJob.puesto}` : 'Completa el formulario para postularte'}
+            </p>
+          </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Job Details */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-4">
-                <CardHeader>
-                  <CardTitle className="text-primary">{positionTitle}</CardTitle>
-                  {vacancy && (
-                    <div className="text-sm text-gray-600 font-medium">
-                      {vacancy.sector}
-                    </div>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-sm">
-                    {positionDescription}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Datos Personales</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Personal Information Section */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre completo *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Tu nombre completo" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            {/* Application Form */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Formulario de Postulación</CardTitle>
-                  <CardDescription>
-                    Completa todos los campos obligatorios para postularte a esta posición.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Datos Personales */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium text-primary">Datos Personales</h3>
-                      
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="fullName">Nombre Completo *</Label>
-                          <Input
-                            id="fullName"
-                            value={formData.fullName}
-                            onChange={(e) => handleInputChange('fullName', e.target.value)}
-                            className={errors.fullName ? 'border-red-500' : ''}
-                          />
-                          {errors.fullName && (
-                            <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
-                          )}
-                        </div>
+                    <FormField
+                      control={form.control}
+                      name="age"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Edad *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="Tu edad" 
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                        <div>
-                          <Label htmlFor="age">Edad *</Label>
-                          <Input
-                            id="age"
-                            type="number"
-                            min="16"
-                            max="65"
-                            value={formData.age}
-                            onChange={(e) => handleInputChange('age', e.target.value)}
-                            className={errors.age ? 'border-red-500' : ''}
-                          />
-                          {errors.age && (
-                            <p className="text-red-500 text-sm mt-1">{errors.age}</p>
-                          )}
-                        </div>
-                      </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="tu@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                      <div>
-                        <Label htmlFor="email">Email *</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          className={errors.email ? 'border-red-500' : ''}
-                        />
-                        {errors.email && (
-                          <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Teléfono *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="+34 123 456 789" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Experience Section */}
+                  <Separator />
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Experiencia</h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-4 mb-4">
+                      <FormField
+                        control={form.control}
+                        name="sectorExperience"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>¿Tienes experiencia en el sector? *</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona una opción" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Sí">Sí</SelectItem>
+                                <SelectItem value="No">No</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </div>
+                      />
 
-                      <div>
-                        <Label htmlFor="phone">Teléfono *</Label>
-                        <Input
-                          id="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => handleInputChange('phone', e.target.value)}
-                          className={errors.phone ? 'border-red-500' : ''}
-                        />
-                        {errors.phone && (
-                          <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                      <FormField
+                        control={form.control}
+                        name="positionExperience"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>¿Tienes experiencia en este puesto específico? *</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona una opción" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Sí">Sí</SelectItem>
+                                <SelectItem value="No">No</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </div>
+                      />
                     </div>
 
-                    {/* Experiencia */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium text-primary">Experiencia</h3>
-                      
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="sectorExperience">¿Tienes experiencia en el sector hostelero? *</Label>
-                          <Select value={formData.sectorExperience} onValueChange={(value) => handleInputChange('sectorExperience', value)}>
-                            <SelectTrigger className={errors.sectorExperience ? 'border-red-500' : ''}>
-                              <SelectValue placeholder="Selecciona una opción" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-white border shadow-md">
-                              <SelectItem value="Sí">Sí</SelectItem>
-                              <SelectItem value="No">No</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {errors.sectorExperience && (
-                            <p className="text-red-500 text-sm mt-1">{errors.sectorExperience}</p>
-                          )}
-                        </div>
+                    <FormField
+                      control={form.control}
+                      name="relevantExperience"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Experiencia relevante *</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Describe tu experiencia profesional relevante para este puesto..."
+                              className="min-h-20"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                        <div>
-                          <Label htmlFor="positionExperience">¿Tienes experiencia en este puesto? *</Label>
-                          <Select value={formData.positionExperience} onValueChange={(value) => handleInputChange('positionExperience', value)}>
-                            <SelectTrigger className={errors.positionExperience ? 'border-red-500' : ''}>
-                              <SelectValue placeholder="Selecciona una opción" />
+                  {/* Availability Section */}
+                  <Separator />
+                  <FormField
+                    control={form.control}
+                    name="availability"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Disponibilidad para incorporarte *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona tu disponibilidad" />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border shadow-md">
-                              <SelectItem value="Sí">Sí</SelectItem>
-                              <SelectItem value="No">No</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {errors.positionExperience && (
-                            <p className="text-red-500 text-sm mt-1">{errors.positionExperience}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="availability">Disponibilidad *</Label>
-                        <Select value={formData.availability} onValueChange={(value) => handleInputChange('availability', value)}>
-                          <SelectTrigger className={errors.availability ? 'border-red-500' : ''}>
-                            <SelectValue placeholder="Selecciona tu disponibilidad" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border shadow-md">
-                            {availabilityOptions.map((option) => (
-                              <SelectItem key={option} value={option}>{option}</SelectItem>
-                            ))}
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Inmediata">Inmediata</SelectItem>
+                            <SelectItem value="< 1 mes">Menos de 1 mes</SelectItem>
+                            <SelectItem value="1-3 meses">1-3 meses</SelectItem>
+                            <SelectItem value="> 3 meses">Más de 3 meses</SelectItem>
                           </SelectContent>
                         </Select>
-                        {errors.availability && (
-                          <p className="text-red-500 text-sm mt-1">{errors.availability}</p>
-                        )}
-                      </div>
-                    </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    {/* Currículum */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium text-primary">Documentación</h3>
-                      
-                      <div>
-                        <Label htmlFor="curriculum">Adjuntar Currículum * (PDF/DOCX máx. 5 MB)</Label>
-                        <div className="mt-2">
-                          <label htmlFor="curriculum" className={`flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 ${errors.curriculum ? 'border-red-500' : 'border-gray-300'}`}>
-                            <div className="text-center">
-                              <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                              <p className="text-sm text-gray-600">
-                                {formData.curriculum ? formData.curriculum.name : 'Haz clic para seleccionar tu CV'}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                Recomendamos incluir foto en tu CV
-                              </p>
-                            </div>
-                          </label>
-                          <input
-                            id="curriculum"
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            onChange={handleFileChange}
-                            className="hidden"
+                  {/* Additional Comments */}
+                  <FormField
+                    control={form.control}
+                    name="additionalComments"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Comentarios adicionales</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Cualquier información adicional que quieras compartir..."
+                            className="min-h-20"
+                            {...field}
                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Consent */}
+                  <FormField
+                    control={form.control}
+                    name="consentGiven"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Acepto el tratamiento de mis datos personales *
+                          </FormLabel>
+                          <FormDescription>
+                            Consiento el tratamiento de mis datos personales para procesos de selección.
+                          </FormDescription>
                         </div>
-                        {errors.curriculum && (
-                          <p className="text-red-500 text-sm mt-1">{errors.curriculum}</p>
-                        )}
-                      </div>
-                    </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    {/* RGPD */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h3 className="text-lg font-medium text-primary">Protección de Datos</h3>
-                      
-                      <div className="flex items-start space-x-2">
-                        <Checkbox
-                          id="consent"
-                          checked={formData.consentGiven}
-                          onCheckedChange={(checked) => 
-                            handleInputChange('consentGiven', checked as boolean)
-                          }
-                          className={errors.consentGiven ? 'border-red-500' : ''}
-                        />
-                        <Label htmlFor="consent" className="text-sm leading-5">
-                          Acepto que mis datos personales sean tratados por el grupo hostelero 
-                          para gestionar mi postulación y comunicarme el estado del proceso de selección. 
-                          Mis datos serán conservados durante el tiempo necesario para estos fines 
-                          y tengo derecho a acceder, rectificar, suprimir y portar mis datos. *
-                        </Label>
-                      </div>
-                      {errors.consentGiven && (
-                        <p className="text-red-500 text-sm">{errors.consentGiven}</p>
-                      )}
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Enviando...' : 'Enviar Postulación'}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
