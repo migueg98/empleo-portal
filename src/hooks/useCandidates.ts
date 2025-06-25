@@ -156,7 +156,7 @@ export const useCandidates = () => {
         })
         .subscribe((status) => {
           console.log('Candidates channel subscription status:', status);
-          if (status === 'SUBSCRIPTION_ERROR') {
+          if (status === 'CHANNEL_ERROR') {
             console.error('Failed to subscribe to candidates channel');
             setError('Real-time updates may not be available');
           }
