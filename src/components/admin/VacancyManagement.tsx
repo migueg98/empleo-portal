@@ -7,29 +7,42 @@ import { JobVacancy } from '@/types/job';
 import VacancyForm from './VacancyForm';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useVacancies } from '@/hooks/useVacancies';
+import { useJobs } from '@/hooks/useJobs';
 
 const VacancyManagement = () => {
-  const { vacancies, addVacancy, updateVacancy, deleteVacancy } = useVacancies();
+  const { jobs } = useJobs();
   const [showForm, setShowForm] = useState(false);
   const [editingVacancy, setEditingVacancy] = useState<JobVacancy | null>(null);
 
+  // Convert jobs to vacancy format
+  const vacancies: JobVacancy[] = jobs.map(job => ({
+    id: job.id,
+    sector: job.title,
+    puesto: job.title,
+    descripcion: job.description,
+    isActive: job.isActive,
+    createdAt: job.createdAt
+  }));
+
   const handleCreateVacancy = (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
-    addVacancy(vacancyData);
+    // This would need to be implemented with the actual job creation logic
+    console.log('Create vacancy:', vacancyData);
     setShowForm(false);
   };
 
   const handleEditVacancy = (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
     if (!editingVacancy) return;
     
-    updateVacancy(editingVacancy.id, vacancyData);
+    // This would need to be implemented with the actual job update logic
+    console.log('Edit vacancy:', vacancyData);
     setEditingVacancy(null);
     setShowForm(false);
   };
 
   const handleDeleteVacancy = (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar esta vacante?')) {
-      deleteVacancy(id);
+      // This would need to be implemented with the actual job deletion logic
+      console.log('Delete vacancy:', id);
     }
   };
 

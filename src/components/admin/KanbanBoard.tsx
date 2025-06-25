@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { JobApplication } from '@/types/job';
-import { mockJobs } from '@/data/mockJobs';
-import { useVacancies } from '@/hooks/useVacancies';
+import { useJobs } from '@/hooks/useJobs';
 import { ChevronRight, Mail, Phone, Calendar, Download } from 'lucide-react';
 import {
   DndContext,
@@ -67,28 +66,29 @@ const SortableApplicationCard = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const { vacancies } = useVacancies();
+  const { jobs } = useJobs();
   
   const getJobTitle = (jobId: string) => {
-    const job = mockJobs.find(j => j.id === jobId);
-    if (job) return job.title;
-    
-    const vacancy = vacancies.find(v => v.id === jobId);
-    return vacancy?.puesto || 'Puesto no encontrado';
+    const job = jobs.find(j => j.id === jobId);
+    return job?.title || 'Puesto no encontrado';
   };
 
   const handleDownloadCV = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Simulate CV download - in a real app, this would download the actual file
-    const blob = new Blob(['CV simulado para ' + application.fullName], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `CV_${application.fullName.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (application.cvUrl) {
+      window.open(application.cvUrl, '_blank');
+    } else {
+      // Fallback for applications without CV
+      const blob = new Blob(['CV no disponible para ' + application.fullName], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CV_${application.fullName.replace(/\s+/g, '_')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (
@@ -135,7 +135,7 @@ const SortableApplicationCard = ({
             onClick={handleDownloadCV}
           >
             <Download size={10} className="mr-1" />
-            Descargar CV
+            {application.cvUrl ? 'Descargar CV' : 'Sin CV'}
           </Button>
         </div>
       </CardContent>
@@ -146,7 +146,7 @@ const SortableApplicationCard = ({
 const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const { vacancies } = useVacancies();
+  const { jobs } = useJobs();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -202,25 +202,26 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   const activeApplication = activeId ? applications.find(app => app.id === activeId) : null;
 
   const getJobTitle = (jobId: string) => {
-    const job = mockJobs.find(j => j.id === jobId);
-    if (job) return job.title;
-    
-    const vacancy = vacancies.find(v => v.id === jobId);
-    return vacancy?.puesto || 'Puesto no encontrado';
+    const job = jobs.find(j => j.id === jobId);
+    return job?.title || 'Puesto no encontrado';
   };
 
   const handleDownloadCV = (application: JobApplication, e: React.MouseEvent) => {
     e.stopPropagation();
-    // Simulate CV download - in a real app, this would download the actual file
-    const blob = new Blob(['CV simulado para ' + application.fullName], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `CV_${application.fullName.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (application.cvUrl) {
+      window.open(application.cvUrl, '_blank');
+    } else {
+      // Fallback for applications without CV
+      const blob = new Blob(['CV no disponible para ' + application.fullName], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CV_${application.fullName.replace(/\s+/g, '_')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (
@@ -331,9 +332,10 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
                 <Button
                   onClick={(e) => handleDownloadCV(selectedApplication, e)}
                   className="flex items-center gap-2"
+                  disabled={!selectedApplication.cvUrl}
                 >
                   <Download size={16} />
-                  Descargar CV
+                  {selectedApplication.cvUrl ? 'Descargar CV' : 'Sin CV disponible'}
                 </Button>
               </div>
               

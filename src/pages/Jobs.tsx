@@ -5,19 +5,41 @@ import Footer from '@/components/Footer';
 import VacancyCard from '@/components/VacancyCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { useVacancies } from '@/hooks/useVacancies';
+import { useJobs } from '@/hooks/useJobs';
 
 const Jobs = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { vacancies } = useVacancies();
+  const { jobs, loading } = useJobs();
 
-  const activeVacancies = vacancies.filter(vacancy => vacancy.isActive);
-  
-  const filteredVacancies = activeVacancies.filter(vacancy => 
-    vacancy.puesto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vacancy.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vacancy.sector.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredJobs = jobs.filter(job => 
+    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    job.business.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Convert jobs to vacancy format for VacancyCard
+  const vacancies = filteredJobs.map(job => ({
+    id: job.id,
+    sector: job.title,
+    puesto: job.title,
+    descripcion: job.description,
+    isActive: job.isActive,
+    createdAt: job.createdAt
+  }));
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <p className="text-lg text-gray-600">Cargando empleos...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,10 +67,10 @@ const Jobs = () => {
         </div>
 
         {/* Jobs Grid */}
-        {filteredVacancies.length > 0 ? (
+        {vacancies.length > 0 ? (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {filteredVacancies.map((vacancy) => (
+              {vacancies.map((vacancy) => (
                 <VacancyCard key={vacancy.id} vacancy={vacancy} />
               ))}
             </div>

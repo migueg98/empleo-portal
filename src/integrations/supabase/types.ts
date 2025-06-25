@@ -9,7 +9,99 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      candidates: {
+        Row: {
+          additional_comments: string | null
+          age: number
+          availability: string
+          consent_given: boolean
+          created_at: string
+          cv_url: string | null
+          email: string
+          estado: string
+          full_name: string
+          id: string
+          job_id: string
+          phone: string
+          position_experience: string
+          sector_experience: string
+          selected_positions: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          additional_comments?: string | null
+          age: number
+          availability: string
+          consent_given?: boolean
+          created_at?: string
+          cv_url?: string | null
+          email: string
+          estado?: string
+          full_name: string
+          id?: string
+          job_id: string
+          phone: string
+          position_experience: string
+          sector_experience: string
+          selected_positions?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          additional_comments?: string | null
+          age?: number
+          availability?: string
+          consent_given?: boolean
+          created_at?: string
+          cv_url?: string | null
+          email?: string
+          estado?: string
+          full_name?: string
+          id?: string
+          job_id?: string
+          phone?: string
+          position_experience?: string
+          sector_experience?: string
+          selected_positions?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      jobs: {
+        Row: {
+          business: string
+          city: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          sector: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          business: string
+          city?: string
+          created_at?: string
+          description: string
+          id: string
+          is_active?: boolean
+          sector: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          business?: string
+          city?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          sector?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -7,17 +7,17 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
-import { JobPosition, JobVacancy } from '@/types/job';
-import { mockJobs } from '@/data/mockJobs';
-import { useVacancies } from '@/hooks/useVacancies';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useJobs } from '@/hooks/useJobs';
+import { useCandidates } from '@/hooks/useCandidates';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   fullName: z.string().min(2, {
@@ -49,18 +49,10 @@ const JobApplication = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const { vacancies } = useVacancies();
+  const { jobs } = useJobs();
+  const { addCandidate } = useCandidates();
 
-  const selectedJob: JobPosition | JobVacancy | undefined = mockJobs.find(job => job.id === jobId) || vacancies.find(vacancy => vacancy.id === jobId);
-
-  // Helper function to get the job title regardless of type
-  const getJobTitle = (job: JobPosition | JobVacancy) => {
-    if ('title' in job) {
-      return job.title; // JobPosition
-    } else {
-      return job.puesto; // JobVacancy
-    }
-  };
+  const selectedJob = jobs.find(job => job.id === jobId);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -77,17 +69,70 @@ const JobApplication = () => {
     },
   });
 
+  const uploadCV = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('cvs')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('cvs')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading CV:', error);
+      return null;
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
+    if (!jobId) {
+      toast.error('No se pudo identificar el puesto de trabajo');
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      let cvUrl: string | undefined;
 
-    console.log('Form values submitted:', values);
-    alert('¡Formulario enviado con éxito!');
-    navigate('/mis-candidaturas');
+      // Upload CV if provided
+      if (values.curriculum) {
+        cvUrl = await uploadCV(values.curriculum) || undefined;
+      }
 
-    setIsSubmitting(false);
+      // Add candidate to Supabase
+      await addCandidate({
+        jobId,
+        fullName: values.fullName,
+        age: values.age,
+        email: values.email,
+        phone: values.phone,
+        selectedPositions: values.selectedPositions || [],
+        sectorExperience: values.sectorExperience,
+        positionExperience: values.positionExperience,
+        availability: values.availability,
+        relevantExperience: '',
+        additionalComments: values.additionalComments,
+        status: 'received',
+        consentGiven: values.consentGiven,
+        cvUrl
+      });
+
+      toast.success('¡Solicitud enviada con éxito!');
+      navigate('/empleos');
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      toast.error('Error al enviar la solicitud. Por favor, inténtalo de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -99,7 +144,7 @@ const JobApplication = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-primary mb-2">Solicitud de Empleo</h1>
             <p className="text-gray-600">
-              {selectedJob ? `Postulándote para: ${getJobTitle(selectedJob)}` : 'Completa el formulario para postularte'}
+              {selectedJob ? `Postulándote para: ${selectedJob.title}` : 'Completa el formulario para postularte'}
             </p>
           </div>
 

@@ -36,6 +36,7 @@ export interface JobApplication {
   createdAt: Date;
   updatedAt: Date;
   consentGiven: boolean;
+  cvUrl?: string;
 }
 
 export interface Candidate {
