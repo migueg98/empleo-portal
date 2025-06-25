@@ -8,11 +8,13 @@ import VacancyForm from './VacancyForm';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useJobs } from '@/hooks/useJobs';
+import { useToast } from '@/hooks/use-toast';
 
 const VacancyManagement = () => {
-  const { jobs } = useJobs();
+  const { jobs, addJob, refreshJobs } = useJobs();
   const [showForm, setShowForm] = useState(false);
   const [editingVacancy, setEditingVacancy] = useState<JobVacancy | null>(null);
+  const { toast } = useToast();
 
   // Convert jobs to vacancy format
   const vacancies: JobVacancy[] = jobs.map(job => ({
@@ -24,25 +26,82 @@ const VacancyManagement = () => {
     createdAt: job.createdAt
   }));
 
-  const handleCreateVacancy = (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
-    // This would need to be implemented with the actual job creation logic
-    console.log('Create vacancy:', vacancyData);
-    setShowForm(false);
+  const handleCreateVacancy = async (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
+    try {
+      console.log('Creating vacancy:', vacancyData);
+      
+      // Transform vacancy data to job format
+      const jobData = {
+        title: vacancyData.puesto,
+        description: vacancyData.descripcion,
+        business: 'Empresa Principal', // Default business name
+        city: 'Jerez de la Frontera', // Default city
+        isActive: vacancyData.isActive
+      };
+
+      await addJob(jobData);
+      
+      toast({
+        title: "Vacante creada",
+        description: "La nueva vacante se ha creado exitosamente.",
+      });
+      
+      setShowForm(false);
+      await refreshJobs(); // Refresh the list to show the new vacancy
+    } catch (error) {
+      console.error('Error creating vacancy:', error);
+      toast({
+        title: "Error",
+        description: "Hubo un error al crear la vacante. Por favor, inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEditVacancy = (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
+  const handleEditVacancy = async (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
     if (!editingVacancy) return;
     
-    // This would need to be implemented with the actual job update logic
-    console.log('Edit vacancy:', vacancyData);
-    setEditingVacancy(null);
-    setShowForm(false);
+    try {
+      console.log('Editing vacancy:', vacancyData);
+      
+      // This would need to be implemented with the actual job update logic
+      // For now, just show a message that it's not implemented
+      toast({
+        title: "Función no disponible",
+        description: "La edición de vacantes será implementada próximamente.",
+        variant: "destructive",
+      });
+      
+      setEditingVacancy(null);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error editing vacancy:', error);
+      toast({
+        title: "Error",
+        description: "Hubo un error al editar la vacante.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteVacancy = (id: string) => {
+  const handleDeleteVacancy = async (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar esta vacante?')) {
-      // This would need to be implemented with the actual job deletion logic
-      console.log('Delete vacancy:', id);
+      try {
+        // This would need to be implemented with the actual job deletion logic
+        console.log('Delete vacancy:', id);
+        toast({
+          title: "Función no disponible",
+          description: "La eliminación de vacantes será implementada próximamente.",
+          variant: "destructive",
+        });
+      } catch (error) {
+        console.error('Error deleting vacancy:', error);
+        toast({
+          title: "Error",
+          description: "Hubo un error al eliminar la vacante.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -96,40 +155,48 @@ const VacancyManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vacancies.map((vacancy) => (
-                <TableRow key={vacancy.id}>
-                  <TableCell>
-                    <Badge variant="outline">{vacancy.sector}</Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">{vacancy.puesto}</TableCell>
-                  <TableCell className="max-w-xs truncate">{vacancy.descripcion}</TableCell>
-                  <TableCell>
-                    <Badge variant={vacancy.isActive ? "default" : "secondary"}>
-                      {vacancy.isActive ? 'Activa' : 'Inactiva'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{vacancy.createdAt.toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => startEdit(vacancy)}
-                      >
-                        <Edit size={14} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteVacancy(vacancy.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
+              {vacancies.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    No hay vacantes disponibles. Haz clic en "Nueva Vacante" para crear una.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                vacancies.map((vacancy) => (
+                  <TableRow key={vacancy.id}>
+                    <TableCell>
+                      <Badge variant="outline">{vacancy.sector}</Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">{vacancy.puesto}</TableCell>
+                    <TableCell className="max-w-xs truncate">{vacancy.descripcion}</TableCell>
+                    <TableCell>
+                      <Badge variant={vacancy.isActive ? "default" : "secondary"}>
+                        {vacancy.isActive ? 'Activa' : 'Inactiva'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{vacancy.createdAt.toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => startEdit(vacancy)}
+                        >
+                          <Edit size={14} />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteVacancy(vacancy.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

@@ -57,9 +57,10 @@ export const useCandidates = () => {
     }
   };
 
-  const updateCandidateStatus = async (candidateId: string, newStatus: JobApplication['status']) => {
+  const updateCandidateStatus = async (candidateId: string, newStatus: JobApplication['status']): Promise<void> => {
     try {
       console.log(`Updating candidate ${candidateId} status to ${newStatus}`);
+      
       const { error } = await supabase
         .from('candidates')
         .update({ 
@@ -68,11 +69,24 @@ export const useCandidates = () => {
         })
         .eq('id', candidateId);
 
-      if (error) throw error;
-      await fetchCandidates(); // Refresh the list
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+
+      console.log(`Successfully updated candidate ${candidateId} status to ${newStatus}`);
+      
+      // Update local state immediately for better UX
+      setCandidates(prevCandidates => 
+        prevCandidates.map(candidate => 
+          candidate.id === candidateId 
+            ? { ...candidate, status: newStatus, updatedAt: new Date() }
+            : candidate
+        )
+      );
     } catch (error) {
       console.error('Error updating candidate status:', error);
-      setError('Error updating candidate status. Please try again.');
+      throw new Error('Error updating candidate status. Please try again.');
     }
   };
 
@@ -116,14 +130,18 @@ export const useCandidates = () => {
 
     // Clean up any existing channel first
     if (channelRef.current) {
-      console.log('Cleaning up existing channel...');
-      supabase.removeChannel(channelRef.current);
+      console.log('Cleaning up existing candidates channel...');
+      try {
+        supabase.removeChannel(channelRef.current);
+      } catch (cleanupError) {
+        console.warn('Error cleaning up existing channel:', cleanupError);
+      }
       channelRef.current = null;
     }
 
     // Set up real-time subscription with unique channel name
     const channelName = `candidates-changes-${Math.random().toString(36).substring(7)}`;
-    console.log('Creating new channel:', channelName);
+    console.log('Creating new candidates channel:', channelName);
     
     try {
       channelRef.current = supabase
@@ -133,20 +151,29 @@ export const useCandidates = () => {
           schema: 'public',
           table: 'candidates'
         }, (payload) => {
-          console.log('Real-time update received:', payload);
+          console.log('Candidates real-time update received:', payload);
           fetchCandidates();
         })
         .subscribe((status) => {
-          console.log('Channel subscription status:', status);
+          console.log('Candidates channel subscription status:', status);
+          if (status === 'SUBSCRIPTION_ERROR') {
+            console.error('Failed to subscribe to candidates channel');
+            setError('Real-time updates may not be available');
+          }
         });
     } catch (error) {
-      console.error('Error setting up real-time subscription:', error);
+      console.error('Error setting up candidates real-time subscription:', error);
+      // Don't set error state for subscription failures, just log
     }
 
     return () => {
       console.log('useCandidates: Cleaning up...');
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+        try {
+          supabase.removeChannel(channelRef.current);
+        } catch (cleanupError) {
+          console.warn('Error during channel cleanup:', cleanupError);
+        }
         channelRef.current = null;
       }
     };

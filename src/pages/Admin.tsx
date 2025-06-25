@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Search, Users, Clock, CheckCircle, XCircle, Briefcase, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Users, Clock, CheckCircle, XCircle, Briefcase, AlertCircle, RefreshCw } from 'lucide-react';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useJobs } from '@/hooks/useJobs';
 
@@ -20,8 +21,8 @@ const Admin = () => {
   const [selectedSectorExperience, setSelectedSectorExperience] = useState<string>('all');
   const [selectedPositionExperience, setSelectedPositionExperience] = useState<string>('all');
   
-  const { candidates, loading: candidatesLoading, error: candidatesError, updateCandidateStatus } = useCandidates();
-  const { jobs, loading: jobsLoading, error: jobsError } = useJobs();
+  const { candidates, loading: candidatesLoading, error: candidatesError, updateCandidateStatus, refreshCandidates } = useCandidates();
+  const { jobs, loading: jobsLoading, error: jobsError, refreshJobs } = useJobs();
 
   const filteredApplications = useMemo(() => {
     if (!candidates || candidates.length === 0) return [];
@@ -56,13 +57,20 @@ const Admin = () => {
     return { total, received, reviewing, contacted, closed };
   }, [candidates]);
 
+  const handleRetry = () => {
+    refreshCandidates();
+    refreshJobs();
+  };
+
+  // Show loading state with spinner
   if (candidatesLoading || jobsLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <p className="text-lg text-gray-600">Cargando datos...</p>
+            <RefreshCw className="mx-auto h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-lg text-gray-600">Cargando datos del panel de administración...</p>
           </div>
         </div>
         <Footer />
@@ -70,16 +78,21 @@ const Admin = () => {
     );
   }
 
+  // Show error state with retry option
   if (candidatesError || jobsError) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="max-w-2xl mx-auto">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              {candidatesError || jobsError}
+            <AlertTitle>Error al cargar el panel de administración</AlertTitle>
+            <AlertDescription className="mt-2">
+              <p className="mb-4">{candidatesError || jobsError}</p>
+              <Button onClick={handleRetry} variant="outline" size="sm">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Reintentar
+              </Button>
             </AlertDescription>
           </Alert>
         </div>
@@ -195,9 +208,9 @@ const Admin = () => {
                   
                   <Select value={selectedJob} onValueChange={setSelectedJob}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Puesto" />
+                      <SelectValue placeholder="Seleccionar puesto" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border shadow-md">
+                    <SelectContent className="bg-white border shadow-md z-50">
                       <SelectItem value="all">Todos los puestos</SelectItem>
                       {jobs.map((job) => (
                         <SelectItem key={job.id} value={job.id}>{job.title}</SelectItem>
@@ -209,10 +222,10 @@ const Admin = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Experiencia en el sector" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border shadow-md">
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="Sí">Sí</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
+                    <SelectContent className="bg-white border shadow-md z-50">
+                      <SelectItem value="all">Experiencia en el sector - Todos</SelectItem>
+                      <SelectItem value="Sí">Experiencia en el sector - Sí</SelectItem>
+                      <SelectItem value="No">Experiencia en el sector - No</SelectItem>
                     </SelectContent>
                   </Select>
                   
@@ -220,10 +233,10 @@ const Admin = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Experiencia en el puesto" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border shadow-md">
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="Sí">Sí</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
+                    <SelectContent className="bg-white border shadow-md z-50">
+                      <SelectItem value="all">Experiencia en el puesto - Todos</SelectItem>
+                      <SelectItem value="Sí">Experiencia en el puesto - Sí</SelectItem>
+                      <SelectItem value="No">Experiencia en el puesto - No</SelectItem>
                     </SelectContent>
                   </Select>
                   

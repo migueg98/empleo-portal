@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { JobApplication } from '@/types/job';
 import { useJobs } from '@/hooks/useJobs';
+import { useToast } from '@/hooks/use-toast';
 import { ChevronRight, Mail, Phone, Calendar, Download } from 'lucide-react';
 import {
   DndContext,
@@ -28,7 +29,7 @@ import {
 
 interface KanbanBoardProps {
   applications: JobApplication[];
-  onStatusChange: (applicationId: string, newStatus: JobApplication['status']) => void;
+  onStatusChange: (applicationId: string, newStatus: JobApplication['status']) => Promise<void>;
 }
 
 const statusLabels = {
@@ -175,7 +176,9 @@ const DroppableColumn = ({
 const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const { jobs } = useJobs();
+  const { toast } = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -195,18 +198,25 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    setIsDragging(true);
+    console.log('Drag started:', event.active.id);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     
+    setActiveId(null);
+    setIsDragging(false);
+    
     if (!over) {
-      setActiveId(null);
+      console.log('Drag ended without valid drop target');
       return;
     }
     
     const activeId = active.id as string;
     const overId = over.id as string;
+    
+    console.log('Drag ended:', { activeId, overId });
     
     // Check if we're dropping over a status container
     if (statusOrder.includes(overId as JobApplication['status'])) {
@@ -214,8 +224,22 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
       const activeApplication = applications.find(app => app.id === activeId);
       
       if (activeApplication && activeApplication.status !== newStatus) {
-        console.log(`Moving application ${activeId} to status ${newStatus}`);
-        onStatusChange(activeId, newStatus);
+        console.log(`Moving application ${activeId} from ${activeApplication.status} to ${newStatus}`);
+        
+        try {
+          await onStatusChange(activeId, newStatus);
+          toast({
+            title: "Estado actualizado",
+            description: `La candidatura de ${activeApplication.fullName} ha sido movida a ${statusLabels[newStatus]}.`,
+          });
+        } catch (error) {
+          console.error('Error updating status:', error);
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar el estado de la candidatura. Por favor, inténtalo de nuevo.",
+            variant: "destructive",
+          });
+        }
       }
     } else {
       // If dropping over another card, find which status column it belongs to
@@ -223,13 +247,25 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
       if (targetApp) {
         const activeApplication = applications.find(app => app.id === activeId);
         if (activeApplication && activeApplication.status !== targetApp.status) {
-          console.log(`Moving application ${activeId} to status ${targetApp.status}`);
-          onStatusChange(activeId, targetApp.status);
+          console.log(`Moving application ${activeId} from ${activeApplication.status} to ${targetApp.status}`);
+          
+          try {
+            await onStatusChange(activeId, targetApp.status);
+            toast({
+              title: "Estado actualizado",
+              description: `La candidatura de ${activeApplication.fullName} ha sido movida a ${statusLabels[targetApp.status]}.`,
+            });
+          } catch (error) {
+            console.error('Error updating status:', error);
+            toast({
+              title: "Error",
+              description: "No se pudo actualizar el estado de la candidatura. Por favor, inténtalo de nuevo.",
+              variant: "destructive",
+            });
+          }
         }
       }
     }
-    
-    setActiveId(null);
   };
 
   const activeApplication = activeId ? applications.find(app => app.id === activeId) : null;
@@ -307,7 +343,7 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
       </DragOverlay>
 
       {/* Application Detail Modal */}
-      {selectedApplication && (
+      {selectedApplication && !isDragging && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="max-w-2xl w-full max-h-96 overflow-y-auto">
             <CardHeader>
