@@ -6,18 +6,25 @@ import { JobApplication } from '@/types/job';
 export const useCandidates = () => {
   const [candidates, setCandidates] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<any>(null);
 
   const fetchCandidates = async () => {
     try {
+      console.log('Fetching candidates from Supabase...');
       const { data, error } = await supabase
         .from('candidates')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      const transformedCandidates: JobApplication[] = data.map(candidate => ({
+      console.log('Raw candidates data:', data);
+
+      const transformedCandidates: JobApplication[] = (data || []).map(candidate => ({
         id: candidate.id,
         jobId: candidate.job_id,
         fullName: candidate.full_name,
@@ -38,9 +45,13 @@ export const useCandidates = () => {
         cvUrl: candidate.cv_url
       }));
 
+      console.log('Transformed candidates:', transformedCandidates);
       setCandidates(transformedCandidates);
+      setError(null);
     } catch (error) {
       console.error('Error fetching candidates:', error);
+      setError('Error loading candidates. Please try again.');
+      setCandidates([]);
     } finally {
       setLoading(false);
     }
@@ -48,6 +59,7 @@ export const useCandidates = () => {
 
   const updateCandidateStatus = async (candidateId: string, newStatus: JobApplication['status']) => {
     try {
+      console.log(`Updating candidate ${candidateId} status to ${newStatus}`);
       const { error } = await supabase
         .from('candidates')
         .update({ 
@@ -60,11 +72,13 @@ export const useCandidates = () => {
       await fetchCandidates(); // Refresh the list
     } catch (error) {
       console.error('Error updating candidate status:', error);
+      setError('Error updating candidate status. Please try again.');
     }
   };
 
   const addCandidate = async (candidateData: Omit<JobApplication, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      console.log('Adding new candidate:', candidateData);
       const { data, error } = await supabase
         .from('candidates')
         .insert([{
@@ -86,38 +100,54 @@ export const useCandidates = () => {
         .single();
 
       if (error) throw error;
+      console.log('Successfully added candidate:', data);
       await fetchCandidates(); // Refresh the list
       return data;
     } catch (error) {
       console.error('Error adding candidate:', error);
+      setError('Error adding candidate. Please try again.');
       throw error;
     }
   };
 
   useEffect(() => {
+    console.log('useCandidates: Setting up subscription...');
     fetchCandidates();
 
-    // Clean up any existing channel
+    // Clean up any existing channel first
     if (channelRef.current) {
+      console.log('Cleaning up existing channel...');
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
 
     // Set up real-time subscription with unique channel name
-    const channelName = `candidates-changes-${Date.now()}`;
-    channelRef.current = supabase
-      .channel(channelName)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'candidates'
-      }, () => {
-        fetchCandidates();
-      })
-      .subscribe();
+    const channelName = `candidates-changes-${Math.random().toString(36).substring(7)}`;
+    console.log('Creating new channel:', channelName);
+    
+    try {
+      channelRef.current = supabase
+        .channel(channelName)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'candidates'
+        }, (payload) => {
+          console.log('Real-time update received:', payload);
+          fetchCandidates();
+        })
+        .subscribe((status) => {
+          console.log('Channel subscription status:', status);
+        });
+    } catch (error) {
+      console.error('Error setting up real-time subscription:', error);
+    }
 
     return () => {
+      console.log('useCandidates: Cleaning up...');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
   }, []);
@@ -125,6 +155,7 @@ export const useCandidates = () => {
   return { 
     candidates, 
     loading, 
+    error,
     updateCandidateStatus, 
     addCandidate,
     refreshCandidates: fetchCandidates 

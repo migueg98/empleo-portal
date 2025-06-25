@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Users, Clock, CheckCircle, XCircle, Briefcase } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Search, Users, Clock, CheckCircle, XCircle, Briefcase, AlertCircle } from 'lucide-react';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useJobs } from '@/hooks/useJobs';
 
@@ -19,10 +20,12 @@ const Admin = () => {
   const [selectedSectorExperience, setSelectedSectorExperience] = useState<string>('all');
   const [selectedPositionExperience, setSelectedPositionExperience] = useState<string>('all');
   
-  const { candidates, loading: candidatesLoading, updateCandidateStatus } = useCandidates();
-  const { jobs, loading: jobsLoading } = useJobs();
+  const { candidates, loading: candidatesLoading, error: candidatesError, updateCandidateStatus } = useCandidates();
+  const { jobs, loading: jobsLoading, error: jobsError } = useJobs();
 
   const filteredApplications = useMemo(() => {
+    if (!candidates || candidates.length === 0) return [];
+    
     return candidates.filter(app => {
       const job = jobs.find(j => j.id === app.jobId);
       
@@ -40,6 +43,10 @@ const Admin = () => {
   }, [candidates, jobs, searchTerm, selectedJob, selectedSectorExperience, selectedPositionExperience]);
 
   const statistics = useMemo(() => {
+    if (!candidates || candidates.length === 0) {
+      return { total: 0, received: 0, reviewing: 0, contacted: 0, closed: 0 };
+    }
+    
     const total = candidates.length;
     const received = candidates.filter(app => app.status === 'received').length;
     const reviewing = candidates.filter(app => app.status === 'reviewing').length;
@@ -57,6 +64,24 @@ const Admin = () => {
           <div className="text-center">
             <p className="text-lg text-gray-600">Cargando datos...</p>
           </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (candidatesError || jobsError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {candidatesError || jobsError}
+            </AlertDescription>
+          </Alert>
         </div>
         <Footer />
       </div>
