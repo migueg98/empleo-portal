@@ -15,6 +15,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  closestCenter,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -43,6 +44,8 @@ const statusColors = {
   contacted: 'bg-green-100 text-green-800',
   closed: 'bg-gray-100 text-gray-800'
 };
+
+const statusOrder: JobApplication['status'][] = ['received', 'reviewing', 'contacted', 'closed'];
 
 const SortableApplicationCard = ({ 
   application, 
@@ -143,6 +146,32 @@ const SortableApplicationCard = ({
   );
 };
 
+const DroppableColumn = ({ 
+  status, 
+  children, 
+  count 
+}: { 
+  status: JobApplication['status']; 
+  children: React.ReactNode; 
+  count: number;
+}) => {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-gray-700">{statusLabels[status]}</h3>
+        <Badge variant="secondary">{count}</Badge>
+      </div>
+      
+      <div 
+        id={status}
+        className="space-y-2 min-h-96 p-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/50"
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -168,34 +197,38 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
     setActiveId(event.active.id as string);
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    if (!over) return;
+    if (!over) {
+      setActiveId(null);
+      return;
+    }
     
     const activeId = active.id as string;
     const overId = over.id as string;
     
-    // Check if we're dropping over a status container or another card
-    const statusKeys = Object.keys(statusLabels) as JobApplication['status'][];
-    let newStatus: JobApplication['status'] | null = null;
-    
-    if (statusKeys.includes(overId as JobApplication['status'])) {
-      newStatus = overId as JobApplication['status'];
+    // Check if we're dropping over a status container
+    if (statusOrder.includes(overId as JobApplication['status'])) {
+      const newStatus = overId as JobApplication['status'];
+      const activeApplication = applications.find(app => app.id === activeId);
+      
+      if (activeApplication && activeApplication.status !== newStatus) {
+        console.log(`Moving application ${activeId} to status ${newStatus}`);
+        onStatusChange(activeId, newStatus);
+      }
     } else {
       // If dropping over another card, find which status column it belongs to
       const targetApp = applications.find(app => app.id === overId);
       if (targetApp) {
-        newStatus = targetApp.status;
+        const activeApplication = applications.find(app => app.id === activeId);
+        if (activeApplication && activeApplication.status !== targetApp.status) {
+          console.log(`Moving application ${activeId} to status ${targetApp.status}`);
+          onStatusChange(activeId, targetApp.status);
+        }
       }
     }
     
-    if (newStatus) {
-      onStatusChange(activeId, newStatus);
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
     setActiveId(null);
   };
 
@@ -227,38 +260,30 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   return (
     <DndContext 
       sensors={sensors}
+      collisionDetection={closestCenter}
       onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Object.entries(statusLabels).map(([status, label]) => (
-          <div key={status} className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-gray-700">{label}</h3>
-              <Badge variant="secondary">
-                {groupedApplications[status as JobApplication['status']]?.length || 0}
-              </Badge>
-            </div>
-            
-            <div 
-              id={status}
-              className="space-y-2 min-h-96 p-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/50"
+        {statusOrder.map((status) => (
+          <DroppableColumn 
+            key={status} 
+            status={status} 
+            count={groupedApplications[status]?.length || 0}
+          >
+            <SortableContext 
+              items={groupedApplications[status]?.map(app => app.id) || []}
+              strategy={verticalListSortingStrategy}
             >
-              <SortableContext 
-                items={groupedApplications[status as JobApplication['status']]?.map(app => app.id) || []}
-                strategy={verticalListSortingStrategy}
-              >
-                {(groupedApplications[status as JobApplication['status']] || []).map((application) => (
-                  <SortableApplicationCard
-                    key={application.id}
-                    application={application}
-                    onCardClick={setSelectedApplication}
-                  />
-                ))}
-              </SortableContext>
-            </div>
-          </div>
+              {(groupedApplications[status] || []).map((application) => (
+                <SortableApplicationCard
+                  key={application.id}
+                  application={application}
+                  onCardClick={setSelectedApplication}
+                />
+              ))}
+            </SortableContext>
+          </DroppableColumn>
         ))}
       </div>
 

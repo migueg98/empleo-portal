@@ -1,11 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { JobPosition } from '@/types/job';
 
 export const useJobs = () => {
   const [jobs, setJobs] = useState<JobPosition[]>([]);
   const [loading, setLoading] = useState(true);
+  const channelRef = useRef<any>(null);
 
   const fetchJobs = async () => {
     try {
@@ -64,9 +65,15 @@ export const useJobs = () => {
   useEffect(() => {
     fetchJobs();
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('jobs-changes')
+    // Clean up any existing channel
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+
+    // Set up real-time subscription with unique channel name
+    const channelName = `jobs-changes-${Date.now()}`;
+    channelRef.current = supabase
+      .channel(channelName)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -77,7 +84,9 @@ export const useJobs = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
     };
   }, []);
 
