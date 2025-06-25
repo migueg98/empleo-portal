@@ -37,9 +37,13 @@ export const useJobs = () => {
 
   const addJob = async (jobData: Omit<JobPosition, 'id' | 'createdAt'>) => {
     try {
+      // Generate a unique ID for the new job
+      const newId = Math.random().toString(36).substring(2, 15);
+      
       const { data, error } = await supabase
         .from('jobs')
         .insert([{
+          id: newId,
           title: jobData.title,
           description: jobData.description,
           business: jobData.business,
