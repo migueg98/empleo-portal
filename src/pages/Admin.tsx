@@ -1,5 +1,5 @@
-
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import KanbanBoard from '@/components/admin/KanbanBoard';
@@ -11,11 +11,15 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Search, Users, Clock, CheckCircle, XCircle, Briefcase, AlertCircle, RefreshCw } from 'lucide-react';
+import { Search, Users, Clock, CheckCircle, XCircle, Briefcase, AlertCircle, RefreshCw, LogOut } from 'lucide-react';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useJobs } from '@/hooks/useJobs';
 
 const Admin = () => {
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const navigate = useNavigate();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJob, setSelectedJob] = useState<string>('all');
   const [selectedSectorExperience, setSelectedSectorExperience] = useState<string>('all');
@@ -23,6 +27,25 @@ const Admin = () => {
   
   const { candidates, loading: candidatesLoading, error: candidatesError, updateCandidateStatus, refreshCandidates } = useCandidates();
   const { jobs, loading: jobsLoading, error: jobsError, refreshJobs } = useJobs();
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const adminFlag = localStorage.getItem('isAdmin');
+      if (adminFlag === 'true') {
+        setIsAuthorized(true);
+      } else {
+        navigate('/admin-login');
+      }
+      setIsCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAdmin');
+    navigate('/');
+  };
 
   const filteredApplications = useMemo(() => {
     if (!candidates || candidates.length === 0) return [];
@@ -62,7 +85,25 @@ const Admin = () => {
     refreshJobs();
   };
 
-  // Show loading state with spinner
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <RefreshCw className="mx-auto h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-lg text-gray-600">Loading...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
+
   if (candidatesLoading || jobsLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -78,7 +119,6 @@ const Admin = () => {
     );
   }
 
-  // Show error state with retry option
   if (candidatesError || jobsError) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -106,11 +146,23 @@ const Admin = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Panel de Administración - RRHH</h1>
-          <p className="text-gray-600">
-            Gestiona las postulaciones recibidas y las vacantes disponibles
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-primary mb-2">Panel de Administración - RRHH</h1>
+            <p className="text-gray-600">
+              Gestiona las postulaciones recibidas y las vacantes disponibles
+            </p>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-gray-600"
+          >
+            <LogOut size={16} />
+            Log out
+          </Button>
         </div>
 
         <Tabs defaultValue="applications" className="w-full">
@@ -186,7 +238,7 @@ const Admin = () => {
               </Card>
             </div>
 
-            {/* Filters */}
+            {/* Filters with clear labels */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Filtros de Búsqueda</CardTitle>
