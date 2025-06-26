@@ -10,22 +10,8 @@ import { ChevronLeft, ChevronRight, Mail, Phone, Calendar, Download } from 'luci
 
 interface KanbanBoardProps {
   applications: JobApplication[];
-  onStatusChange: (applicationId: string, newStatus: JobApplication['status']) => Promise<void>;
+  onStatusChange: (applicationId: string, newStatus: JobApplication['internalStatus']) => Promise<void>;
 }
-
-const statusLabels = {
-  received: 'Recibido',
-  reviewing: 'En Revisión',
-  contacted: 'Contactado',
-  closed: 'Cerrado'
-};
-
-const statusColors = {
-  received: 'bg-blue-100 text-blue-800',
-  reviewing: 'bg-yellow-100 text-yellow-800',
-  contacted: 'bg-green-100 text-green-800',
-  closed: 'bg-gray-100 text-gray-800'
-};
 
 const internalStatusLabels = {
   nuevo: 'Nuevo',
@@ -35,13 +21,13 @@ const internalStatusLabels = {
 };
 
 const internalStatusColors = {
-  nuevo: 'bg-gray-200 text-gray-700',
-  no_valido: 'bg-red-200 text-red-700',
-  posible: 'bg-orange-200 text-orange-700',
-  buen_candidato: 'bg-green-200 text-green-700'
+  nuevo: 'bg-blue-100 text-blue-800',
+  no_valido: 'bg-red-100 text-red-800',
+  posible: 'bg-orange-100 text-orange-800',
+  buen_candidato: 'bg-green-100 text-green-800'
 };
 
-const statusOrder: JobApplication['status'][] = ['received', 'reviewing', 'contacted', 'closed'];
+const statusOrder: JobApplication['internalStatus'][] = ['nuevo', 'no_valido', 'posible', 'buen_candidato'];
 
 const ApplicationCard = ({ 
   application, 
@@ -89,20 +75,12 @@ const ApplicationCard = ({
           <CardTitle className="text-sm font-medium">
             {application.fullName}
           </CardTitle>
-          <div className="flex flex-col gap-1">
-            <Badge 
-              variant="secondary" 
-              className={`text-xs ${statusColors[application.status]}`}
-            >
-              {statusLabels[application.status]}
-            </Badge>
-            <Badge 
-              variant="secondary" 
-              className={`text-xs ${internalStatusColors[application.internalStatus || 'nuevo']}`}
-            >
-              {internalStatusLabels[application.internalStatus || 'nuevo']}
-            </Badge>
-          </div>
+          <Badge 
+            variant="secondary" 
+            className={`text-xs ${internalStatusColors[application.internalStatus]}`}
+          >
+            {internalStatusLabels[application.internalStatus]}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
@@ -170,14 +148,14 @@ const Column = ({
   children, 
   count 
 }: { 
-  status: JobApplication['status']; 
+  status: JobApplication['internalStatus']; 
   children: React.ReactNode; 
   count: number;
 }) => {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-gray-700">{statusLabels[status]}</h3>
+        <h3 className="font-semibold text-gray-700">{internalStatusLabels[status]}</h3>
         <Badge variant="secondary">{count}</Badge>
       </div>
       
@@ -194,18 +172,18 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   const { toast } = useToast();
 
   const groupedApplications = applications.reduce((acc, app) => {
-    if (!acc[app.status]) {
-      acc[app.status] = [];
+    if (!acc[app.internalStatus]) {
+      acc[app.internalStatus] = [];
     }
-    acc[app.status].push(app);
+    acc[app.internalStatus].push(app);
     return acc;
-  }, {} as Record<JobApplication['status'], JobApplication[]>);
+  }, {} as Record<JobApplication['internalStatus'], JobApplication[]>);
 
   const moveApplication = async (applicationId: string, direction: 'left' | 'right') => {
     const application = applications.find(app => app.id === applicationId);
     if (!application) return;
 
-    const currentIndex = statusOrder.indexOf(application.status);
+    const currentIndex = statusOrder.indexOf(application.internalStatus);
     let newIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
     
     if (newIndex < 0 || newIndex >= statusOrder.length) return;
@@ -216,7 +194,7 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
       await onStatusChange(applicationId, newStatus);
       toast({
         title: "Estado actualizado",
-        description: `La candidatura de ${application.fullName} ha sido movida a ${statusLabels[newStatus]}.`,
+        description: `La candidatura de ${application.fullName} ha sido movida a ${internalStatusLabels[newStatus]}.`,
       });
     } catch (error) {
       console.error('Error updating status:', error);
@@ -260,7 +238,7 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
             count={groupedApplications[status]?.length || 0}
           >
             {(groupedApplications[status] || []).map((application) => {
-              const currentIndex = statusOrder.indexOf(application.status);
+              const currentIndex = statusOrder.indexOf(application.internalStatus);
               return (
                 <ApplicationCard
                   key={application.id}
@@ -300,11 +278,8 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2 mb-4">
-                <Badge className={statusColors[selectedApplication.status]}>
-                  {statusLabels[selectedApplication.status]}
-                </Badge>
-                <Badge className={internalStatusColors[selectedApplication.internalStatus || 'nuevo']}>
-                  {internalStatusLabels[selectedApplication.internalStatus || 'nuevo']}
+                <Badge className={internalStatusColors[selectedApplication.internalStatus]}>
+                  {internalStatusLabels[selectedApplication.internalStatus]}
                 </Badge>
               </div>
               

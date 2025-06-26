@@ -32,8 +32,7 @@ export interface JobApplication {
   relevantExperience: string;
   additionalComments?: string;
   curriculum?: File;
-  status: 'received' | 'reviewing' | 'contacted' | 'closed';
-  internalStatus?: 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato';
+  internalStatus: 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato';
   createdAt: Date;
   updatedAt: Date;
   consentGiven: boolean;

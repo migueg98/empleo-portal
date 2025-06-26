@@ -37,7 +37,6 @@ export const useCandidates = () => {
         relevantExperience: '',
         additionalComments: candidate.additional_comments || '',
         curriculum: undefined,
-        status: candidate.estado as 'received' | 'reviewing' | 'contacted' | 'closed',
         internalStatus: candidate.estado_interno as 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato',
         createdAt: new Date(candidate.created_at),
         updatedAt: new Date(candidate.updated_at),
@@ -57,33 +56,13 @@ export const useCandidates = () => {
     }
   };
 
-  const updateCandidateStatus = async (candidateId: string, newStatus: JobApplication['status']): Promise<void> => {
+  const updateCandidateStatus = async (candidateId: string, newInternalStatus: JobApplication['internalStatus']): Promise<void> => {
     try {
-      console.log(`Updating candidate ${candidateId} status to ${newStatus}`);
-      
-      // Map status to internal status
-      let newInternalStatus: string;
-      switch (newStatus) {
-        case 'received':
-          newInternalStatus = 'nuevo';
-          break;
-        case 'reviewing':
-          newInternalStatus = 'no_valido';
-          break;
-        case 'contacted':
-          newInternalStatus = 'posible';
-          break;
-        case 'closed':
-          newInternalStatus = 'buen_candidato';
-          break;
-        default:
-          newInternalStatus = 'nuevo';
-      }
+      console.log(`Updating candidate ${candidateId} internal status to ${newInternalStatus}`);
       
       const { error } = await supabase
         .from('candidates')
         .update({ 
-          estado: newStatus,
           estado_interno: newInternalStatus,
           updated_at: new Date().toISOString()
         })
@@ -94,7 +73,7 @@ export const useCandidates = () => {
         throw error;
       }
 
-      console.log(`Successfully updated candidate ${candidateId} status to ${newStatus} and internal status to ${newInternalStatus}`);
+      console.log(`Successfully updated candidate ${candidateId} internal status to ${newInternalStatus}`);
       
       // Update local state immediately for better UX
       setCandidates(prevCandidates => 
@@ -102,8 +81,7 @@ export const useCandidates = () => {
           candidate.id === candidateId 
             ? { 
                 ...candidate, 
-                status: newStatus, 
-                internalStatus: newInternalStatus as 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato',
+                internalStatus: newInternalStatus,
                 updatedAt: new Date() 
               }
             : candidate
@@ -115,9 +93,29 @@ export const useCandidates = () => {
     }
   };
 
-  const addCandidate = async (candidateData: Omit<JobApplication, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addCandidate = async (candidateData: Omit<JobApplication, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean; error?: string }> => {
     try {
       console.log('Adding new candidate:', candidateData);
+      
+      // Check for duplicate application
+      const { data: existingCandidate, error: checkError } = await supabase
+        .from('candidates')
+        .select('id')
+        .eq('email', candidateData.email)
+        .eq('job_id', candidateData.jobId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingCandidate) {
+        return { 
+          success: false, 
+          error: 'Ya te has inscrito en esta oferta con este correo.' 
+        };
+      }
+
       const { data, error } = await supabase
         .from('candidates')
         .insert([{
@@ -132,7 +130,6 @@ export const useCandidates = () => {
           availability: candidateData.availability,
           additional_comments: candidateData.additionalComments,
           cv_url: candidateData.cvUrl,
-          estado: candidateData.status,
           estado_interno: candidateData.internalStatus || 'nuevo',
           consent_given: candidateData.consentGiven
         }])
@@ -142,11 +139,13 @@ export const useCandidates = () => {
       if (error) throw error;
       console.log('Successfully added candidate:', data);
       await fetchCandidates(); // Refresh the list
-      return data;
+      return { success: true };
     } catch (error) {
       console.error('Error adding candidate:', error);
-      setError('Error adding candidate. Please try again.');
-      throw error;
+      return { 
+        success: false, 
+        error: 'Error adding candidate. Please try again.' 
+      };
     }
   };
 

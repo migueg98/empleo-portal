@@ -3,10 +3,9 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Clock, User, Trash2 } from 'lucide-react';
+import { Calendar, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useJobs } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
@@ -15,8 +14,6 @@ interface CandidateApplication {
   id: string;
   jobId: string;
   appliedDate: string;
-  status: string;
-  lastUpdate: string;
   email: string;
 }
 
@@ -33,8 +30,8 @@ const CandidatePortal = () => {
     
     try {
       const { data, error } = await supabase
-        .from('candidate_applications')
-        .select('*')
+        .from('candidates')
+        .select('id, job_id, created_at, email')
         .eq('email', email)
         .order('created_at', { ascending: false });
 
@@ -44,8 +41,6 @@ const CandidatePortal = () => {
         id: candidate.id,
         jobId: candidate.job_id,
         appliedDate: candidate.created_at,
-        status: candidate.estado_publico,
-        lastUpdate: candidate.updated_at,
         email: candidate.email
       }));
 
@@ -145,7 +140,7 @@ const CandidatePortal = () => {
               Mis Candidaturas
             </h1>
             <p className="text-lg text-gray-600">
-              Consulta el estado de tus postulaciones
+              Consulta tus postulaciones
             </p>
           </div>
 
@@ -208,28 +203,13 @@ const CandidatePortal = () => {
                             <CardTitle className="text-xl text-primary mb-2">
                               {getJobTitle(application.jobId)}
                             </CardTitle>
-                            <CardDescription className="flex items-center gap-4 text-sm">
-                              <span className="flex items-center gap-1">
-                                <Clock size={14} />
-                                Postulado: {new Date(application.appliedDate).toLocaleDateString('es-ES')}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock size={14} />
-                                Actualizado: {new Date(application.lastUpdate).toLocaleDateString('es-ES')}
-                              </span>
+                            <CardDescription className="flex items-center gap-2 text-sm">
+                              <Calendar size={14} />
+                              <span>Postulado: {new Date(application.appliedDate).toLocaleDateString('es-ES')}</span>
                             </CardDescription>
                           </div>
-                          <Badge className="bg-blue-100 text-blue-800">
-                            {application.status}
-                          </Badge>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <User size={14} />
-                          <span>ID de candidatura: {application.id}</span>
-                        </div>
-                      </CardContent>
                     </Card>
                   ))}
                   

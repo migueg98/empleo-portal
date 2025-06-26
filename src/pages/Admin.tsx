@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -11,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Search, Users, Clock, CheckCircle, XCircle, Briefcase, AlertCircle, RefreshCw, LogOut } from 'lucide-react';
+import { Search, Users, Briefcase, AlertCircle, RefreshCw, LogOut } from 'lucide-react';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useJobs } from '@/hooks/useJobs';
 
@@ -68,16 +69,16 @@ const Admin = () => {
 
   const statistics = useMemo(() => {
     if (!candidates || candidates.length === 0) {
-      return { total: 0, received: 0, reviewing: 0, contacted: 0, closed: 0 };
+      return { total: 0, nuevo: 0, no_valido: 0, posible: 0, buen_candidato: 0 };
     }
     
     const total = candidates.length;
-    const received = candidates.filter(app => app.status === 'received').length;
-    const reviewing = candidates.filter(app => app.status === 'reviewing').length;
-    const contacted = candidates.filter(app => app.status === 'contacted').length;
-    const closed = candidates.filter(app => app.status === 'closed').length;
+    const nuevo = candidates.filter(app => app.internalStatus === 'nuevo').length;
+    const no_valido = candidates.filter(app => app.internalStatus === 'no_valido').length;
+    const posible = candidates.filter(app => app.internalStatus === 'posible').length;
+    const buen_candidato = candidates.filter(app => app.internalStatus === 'buen_candidato').length;
     
-    return { total, received, reviewing, contacted, closed };
+    return { total, nuevo, no_valido, posible, buen_candidato };
   }, [candidates]);
 
   const handleRetry = () => {
@@ -194,46 +195,37 @@ const Admin = () => {
               
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Clock size={16} />
-                    Recibidos
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Nuevo</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">{statistics.received}</div>
+                  <div className="text-2xl font-bold text-blue-600">{statistics.nuevo}</div>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">En Revisión</CardTitle>
+                  <CardTitle className="text-sm font-medium">No válido</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-yellow-600">{statistics.reviewing}</div>
+                  <div className="text-2xl font-bold text-red-600">{statistics.no_valido}</div>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <CheckCircle size={16} />
-                    Contactados
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Posible</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{statistics.contacted}</div>
+                  <div className="text-2xl font-bold text-orange-600">{statistics.posible}</div>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <XCircle size={16} />
-                    Cerrados
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium">Buen candidato</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-gray-600">{statistics.closed}</div>
+                  <div className="text-2xl font-bold text-green-600">{statistics.buen_candidato}</div>
                 </CardContent>
               </Card>
             </div>
