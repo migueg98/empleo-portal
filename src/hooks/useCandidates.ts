@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { JobApplication } from '@/types/job';
@@ -39,6 +38,7 @@ export const useCandidates = () => {
         additionalComments: candidate.additional_comments || '',
         curriculum: undefined,
         status: candidate.estado as 'received' | 'reviewing' | 'contacted' | 'closed',
+        internalStatus: candidate.estado_interno as 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato',
         createdAt: new Date(candidate.created_at),
         updatedAt: new Date(candidate.updated_at),
         consentGiven: candidate.consent_given,
@@ -61,10 +61,30 @@ export const useCandidates = () => {
     try {
       console.log(`Updating candidate ${candidateId} status to ${newStatus}`);
       
+      // Map status to internal status
+      let newInternalStatus: string;
+      switch (newStatus) {
+        case 'received':
+          newInternalStatus = 'nuevo';
+          break;
+        case 'reviewing':
+          newInternalStatus = 'no_valido';
+          break;
+        case 'contacted':
+          newInternalStatus = 'posible';
+          break;
+        case 'closed':
+          newInternalStatus = 'buen_candidato';
+          break;
+        default:
+          newInternalStatus = 'nuevo';
+      }
+      
       const { error } = await supabase
         .from('candidates')
         .update({ 
           estado: newStatus,
+          estado_interno: newInternalStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', candidateId);
@@ -74,13 +94,18 @@ export const useCandidates = () => {
         throw error;
       }
 
-      console.log(`Successfully updated candidate ${candidateId} status to ${newStatus}`);
+      console.log(`Successfully updated candidate ${candidateId} status to ${newStatus} and internal status to ${newInternalStatus}`);
       
       // Update local state immediately for better UX
       setCandidates(prevCandidates => 
         prevCandidates.map(candidate => 
           candidate.id === candidateId 
-            ? { ...candidate, status: newStatus, updatedAt: new Date() }
+            ? { 
+                ...candidate, 
+                status: newStatus, 
+                internalStatus: newInternalStatus as 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato',
+                updatedAt: new Date() 
+              }
             : candidate
         )
       );
@@ -108,6 +133,7 @@ export const useCandidates = () => {
           additional_comments: candidateData.additionalComments,
           cv_url: candidateData.cvUrl,
           estado: candidateData.status,
+          estado_interno: candidateData.internalStatus || 'nuevo',
           consent_given: candidateData.consentGiven
         }])
         .select()

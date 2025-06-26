@@ -5,38 +5,35 @@ import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Mail, Phone, User } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Clock, User, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useJobs } from '@/hooks/useJobs';
+import { useToast } from '@/hooks/use-toast';
 
 interface CandidateApplication {
   id: string;
   jobId: string;
   appliedDate: string;
-  status: 'received' | 'reviewing' | 'contacted' | 'closed';
+  status: string;
   lastUpdate: string;
   email: string;
 }
-
-const statusConfig = {
-  received: { label: 'Recibido', color: 'bg-blue-100 text-blue-800' },
-  reviewing: { label: 'En revisión', color: 'bg-yellow-100 text-yellow-800' },
-  contacted: { label: 'Contactado', color: 'bg-green-100 text-green-800' },
-  closed: { label: 'Cerrado', color: 'bg-gray-100 text-gray-800' }
-};
 
 const CandidatePortal = () => {
   const [applications, setApplications] = useState<CandidateApplication[]>([]);
   const [candidateEmail, setCandidateEmail] = useState('');
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const { jobs } = useJobs();
+  const { toast } = useToast();
 
   const fetchApplications = async (email: string) => {
     if (!email) return;
     
     try {
       const { data, error } = await supabase
-        .from('candidates')
+        .from('candidate_applications')
         .select('*')
         .eq('email', email)
         .order('created_at', { ascending: false });
@@ -47,7 +44,7 @@ const CandidatePortal = () => {
         id: candidate.id,
         jobId: candidate.job_id,
         appliedDate: candidate.created_at,
-        status: candidate.estado as 'received' | 'reviewing' | 'contacted' | 'closed',
+        status: candidate.estado_publico,
         lastUpdate: candidate.updated_at,
         email: candidate.email
       }));
@@ -57,6 +54,40 @@ const CandidatePortal = () => {
       console.error('Error fetching applications:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteMyData = async () => {
+    if (!candidateEmail) return;
+    
+    setDeleting(true);
+    try {
+      // Delete all candidate records for this email
+      const { error } = await supabase
+        .from('candidates')
+        .delete()
+        .eq('email', candidateEmail);
+
+      if (error) throw error;
+
+      // Clear local state
+      setApplications([]);
+      localStorage.removeItem('candidateEmail');
+      setCandidateEmail('');
+      
+      toast({
+        title: "Datos eliminados",
+        description: "Tus datos han sido eliminados con éxito.",
+      });
+    } catch (error) {
+      console.error('Error deleting data:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron eliminar los datos. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -188,8 +219,8 @@ const CandidatePortal = () => {
                               </span>
                             </CardDescription>
                           </div>
-                          <Badge className={statusConfig[application.status].color}>
-                            {statusConfig[application.status].label}
+                          <Badge className="bg-blue-100 text-blue-800">
+                            {application.status}
                           </Badge>
                         </div>
                       </CardHeader>
@@ -213,8 +244,21 @@ const CandidatePortal = () => {
                         Si deseas eliminar todos tus datos personales de nuestro sistema, 
                         puedes ejercer tu derecho al olvido.
                       </p>
-                      <Button variant="destructive" size="sm">
-                        Eliminar mis datos
+                      <Alert className="mb-4 border-red-300 bg-red-50">
+                        <AlertDescription className="text-red-700">
+                          <strong>Atención:</strong> Esta acción eliminará permanentemente todos tus datos 
+                          y candidaturas. No se puede deshacer.
+                        </AlertDescription>
+                      </Alert>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={deleteMyData}
+                        disabled={deleting}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash2 size={16} />
+                        {deleting ? 'Eliminando...' : 'Eliminar mis datos'}
                       </Button>
                     </CardContent>
                   </Card>

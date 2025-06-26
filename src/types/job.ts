@@ -33,6 +33,7 @@ export interface JobApplication {
   additionalComments?: string;
   curriculum?: File;
   status: 'received' | 'reviewing' | 'contacted' | 'closed';
+  internalStatus?: 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato';
   createdAt: Date;
   updatedAt: Date;
   consentGiven: boolean;

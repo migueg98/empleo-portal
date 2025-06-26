@@ -6,26 +6,7 @@ import { Button } from '@/components/ui/button';
 import { JobApplication } from '@/types/job';
 import { useJobs } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronRight, Mail, Phone, Calendar, Download } from 'lucide-react';
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  CSS,
-} from '@dnd-kit/utilities';
+import { ChevronLeft, ChevronRight, Mail, Phone, Calendar, Download } from 'lucide-react';
 
 interface KanbanBoardProps {
   applications: JobApplication[];
@@ -46,30 +27,37 @@ const statusColors = {
   closed: 'bg-gray-100 text-gray-800'
 };
 
+const internalStatusLabels = {
+  nuevo: 'Nuevo',
+  no_valido: 'No válido',
+  posible: 'Posible',
+  buen_candidato: 'Buen candidato'
+};
+
+const internalStatusColors = {
+  nuevo: 'bg-gray-200 text-gray-700',
+  no_valido: 'bg-red-200 text-red-700',
+  posible: 'bg-orange-200 text-orange-700',
+  buen_candidato: 'bg-green-200 text-green-700'
+};
+
 const statusOrder: JobApplication['status'][] = ['received', 'reviewing', 'contacted', 'closed'];
 
-const SortableApplicationCard = ({ 
+const ApplicationCard = ({ 
   application, 
-  onCardClick 
+  onCardClick,
+  onMoveLeft,
+  onMoveRight,
+  canMoveLeft,
+  canMoveRight
 }: { 
   application: JobApplication; 
   onCardClick: (app: JobApplication) => void;
+  onMoveLeft: () => void;
+  onMoveRight: () => void;
+  canMoveLeft: boolean;
+  canMoveRight: boolean;
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: application.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
   const { jobs } = useJobs();
   
   const getJobTitle = (jobId: string) => {
@@ -82,7 +70,6 @@ const SortableApplicationCard = ({
     if (application.cvUrl) {
       window.open(application.cvUrl, '_blank');
     } else {
-      // Fallback for applications without CV
       const blob = new Blob(['CV no disponible para ' + application.fullName], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -96,25 +83,26 @@ const SortableApplicationCard = ({
   };
 
   return (
-    <Card 
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="cursor-grab hover:shadow-md transition-shadow active:cursor-grabbing"
-      onClick={() => onCardClick(application)}
-    >
+    <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onCardClick(application)}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <CardTitle className="text-sm font-medium">
             {application.fullName}
           </CardTitle>
-          <Badge 
-            variant="secondary" 
-            className={`text-xs ${statusColors[application.status]}`}
-          >
-            {statusLabels[application.status]}
-          </Badge>
+          <div className="flex flex-col gap-1">
+            <Badge 
+              variant="secondary" 
+              className={`text-xs ${statusColors[application.status]}`}
+            >
+              {statusLabels[application.status]}
+            </Badge>
+            <Badge 
+              variant="secondary" 
+              className={`text-xs ${internalStatusColors[application.internalStatus || 'nuevo']}`}
+            >
+              {internalStatusLabels[application.internalStatus || 'nuevo']}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
@@ -132,22 +120,52 @@ const SortableApplicationCard = ({
             <Calendar size={12} />
             <span>{new Date(application.createdAt).toLocaleDateString('es-ES')}</span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full mt-2 text-xs h-6"
-            onClick={handleDownloadCV}
-          >
-            <Download size={10} className="mr-1" />
-            {application.cvUrl ? 'Descargar CV' : 'Sin CV'}
-          </Button>
+          
+          <div className="flex gap-2 mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs h-6"
+              onClick={handleDownloadCV}
+            >
+              <Download size={10} className="mr-1" />
+              {application.cvUrl ? 'Descargar CV' : 'Sin CV'}
+            </Button>
+          </div>
+          
+          <div className="flex justify-center gap-2 mt-2 pt-2 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveLeft();
+              }}
+              disabled={!canMoveLeft}
+            >
+              <ChevronLeft size={12} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveRight();
+              }}
+              disabled={!canMoveRight}
+            >
+              <ChevronRight size={12} />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 };
 
-const DroppableColumn = ({ 
+const Column = ({ 
   status, 
   children, 
   count 
@@ -163,10 +181,7 @@ const DroppableColumn = ({
         <Badge variant="secondary">{count}</Badge>
       </div>
       
-      <div 
-        id={status}
-        className="space-y-2 min-h-96 p-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/50"
-      >
+      <div className="space-y-2 min-h-96 p-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/50">
         {children}
       </div>
     </div>
@@ -175,18 +190,8 @@ const DroppableColumn = ({
 
 const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const { jobs } = useJobs();
   const { toast } = useToast();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
 
   const groupedApplications = applications.reduce((acc, app) => {
     if (!acc[app.status]) {
@@ -196,79 +201,32 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
     return acc;
   }, {} as Record<JobApplication['status'], JobApplication[]>);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-    setIsDragging(true);
-    console.log('Drag started:', event.active.id);
-  };
+  const moveApplication = async (applicationId: string, direction: 'left' | 'right') => {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application) return;
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
+    const currentIndex = statusOrder.indexOf(application.status);
+    let newIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
     
-    setActiveId(null);
-    setIsDragging(false);
+    if (newIndex < 0 || newIndex >= statusOrder.length) return;
     
-    if (!over) {
-      console.log('Drag ended without valid drop target');
-      return;
-    }
+    const newStatus = statusOrder[newIndex];
     
-    const activeId = active.id as string;
-    const overId = over.id as string;
-    
-    console.log('Drag ended:', { activeId, overId });
-    
-    // Check if we're dropping over a status container
-    if (statusOrder.includes(overId as JobApplication['status'])) {
-      const newStatus = overId as JobApplication['status'];
-      const activeApplication = applications.find(app => app.id === activeId);
-      
-      if (activeApplication && activeApplication.status !== newStatus) {
-        console.log(`Moving application ${activeId} from ${activeApplication.status} to ${newStatus}`);
-        
-        try {
-          await onStatusChange(activeId, newStatus);
-          toast({
-            title: "Estado actualizado",
-            description: `La candidatura de ${activeApplication.fullName} ha sido movida a ${statusLabels[newStatus]}.`,
-          });
-        } catch (error) {
-          console.error('Error updating status:', error);
-          toast({
-            title: "Error",
-            description: "No se pudo actualizar el estado de la candidatura. Por favor, inténtalo de nuevo.",
-            variant: "destructive",
-          });
-        }
-      }
-    } else {
-      // If dropping over another card, find which status column it belongs to
-      const targetApp = applications.find(app => app.id === overId);
-      if (targetApp) {
-        const activeApplication = applications.find(app => app.id === activeId);
-        if (activeApplication && activeApplication.status !== targetApp.status) {
-          console.log(`Moving application ${activeId} from ${activeApplication.status} to ${targetApp.status}`);
-          
-          try {
-            await onStatusChange(activeId, targetApp.status);
-            toast({
-              title: "Estado actualizado",
-              description: `La candidatura de ${activeApplication.fullName} ha sido movida a ${statusLabels[targetApp.status]}.`,
-            });
-          } catch (error) {
-            console.error('Error updating status:', error);
-            toast({
-              title: "Error",
-              description: "No se pudo actualizar el estado de la candidatura. Por favor, inténtalo de nuevo.",
-              variant: "destructive",
-            });
-          }
-        }
-      }
+    try {
+      await onStatusChange(applicationId, newStatus);
+      toast({
+        title: "Estado actualizado",
+        description: `La candidatura de ${application.fullName} ha sido movida a ${statusLabels[newStatus]}.`,
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de la candidatura. Por favor, inténtalo de nuevo.",
+        variant: "destructive",
+      });
     }
   };
-
-  const activeApplication = activeId ? applications.find(app => app.id === activeId) : null;
 
   const getJobTitle = (jobId: string) => {
     const job = jobs.find(j => j.id === jobId);
@@ -280,7 +238,6 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
     if (application.cvUrl) {
       window.open(application.cvUrl, '_blank');
     } else {
-      // Fallback for applications without CV
       const blob = new Blob(['CV no disponible para ' + application.fullName], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -294,56 +251,34 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
   };
 
   return (
-    <DndContext 
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statusOrder.map((status) => (
-          <DroppableColumn 
+          <Column 
             key={status} 
             status={status} 
             count={groupedApplications[status]?.length || 0}
           >
-            <SortableContext 
-              items={groupedApplications[status]?.map(app => app.id) || []}
-              strategy={verticalListSortingStrategy}
-            >
-              {(groupedApplications[status] || []).map((application) => (
-                <SortableApplicationCard
+            {(groupedApplications[status] || []).map((application) => {
+              const currentIndex = statusOrder.indexOf(application.status);
+              return (
+                <ApplicationCard
                   key={application.id}
                   application={application}
                   onCardClick={setSelectedApplication}
+                  onMoveLeft={() => moveApplication(application.id, 'left')}
+                  onMoveRight={() => moveApplication(application.id, 'right')}
+                  canMoveLeft={currentIndex > 0}
+                  canMoveRight={currentIndex < statusOrder.length - 1}
                 />
-              ))}
-            </SortableContext>
-          </DroppableColumn>
+              );
+            })}
+          </Column>
         ))}
       </div>
 
-      <DragOverlay>
-        {activeApplication ? (
-          <Card className="cursor-grabbing opacity-80">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                {activeApplication.fullName}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2 text-xs text-gray-600">
-                <p className="font-medium text-primary">
-                  {getJobTitle(activeApplication.jobId)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
-      </DragOverlay>
-
       {/* Application Detail Modal */}
-      {selectedApplication && !isDragging && (
+      {selectedApplication && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="max-w-2xl w-full max-h-96 overflow-y-auto">
             <CardHeader>
@@ -364,6 +299,15 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex gap-2 mb-4">
+                <Badge className={statusColors[selectedApplication.status]}>
+                  {statusLabels[selectedApplication.status]}
+                </Badge>
+                <Badge className={internalStatusColors[selectedApplication.internalStatus || 'nuevo']}>
+                  {internalStatusLabels[selectedApplication.internalStatus || 'nuevo']}
+                </Badge>
+              </div>
+              
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">Email:</p>
@@ -408,7 +352,7 @@ const KanbanBoard = ({ applications, onStatusChange }: KanbanBoardProps) => {
           </Card>
         </div>
       )}
-    </DndContext>
+    </div>
   );
 };
 

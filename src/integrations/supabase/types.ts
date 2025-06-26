@@ -19,6 +19,7 @@ export type Database = {
           cv_url: string | null
           email: string
           estado: string
+          estado_interno: string
           full_name: string
           id: string
           job_id: string
@@ -37,6 +38,7 @@ export type Database = {
           cv_url?: string | null
           email: string
           estado?: string
+          estado_interno?: string
           full_name: string
           id?: string
           job_id: string
@@ -55,6 +57,7 @@ export type Database = {
           cv_url?: string | null
           email?: string
           estado?: string
+          estado_interno?: string
           full_name?: string
           id?: string
           job_id?: string
@@ -104,7 +107,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      candidate_applications: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          estado_publico: string | null
+          full_name: string | null
+          id: string | null
+          job_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          estado_publico?: never
+          full_name?: string | null
+          id?: string | null
+          job_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          estado_publico?: never
+          full_name?: string | null
+          id?: string | null
+          job_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
