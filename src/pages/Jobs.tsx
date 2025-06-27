@@ -29,11 +29,11 @@ const Jobs = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-bg text-text">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <p className="text-lg text-gray-600">Cargando empleos...</p>
+            <p className="text-lg text-text/70">Cargando empleos...</p>
           </div>
         </div>
         <Footer />
@@ -42,7 +42,7 @@ const Jobs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg text-text">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -50,12 +50,12 @@ const Jobs = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-primary mb-4">
             Empleos Disponibles
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+          <p className="text-lg text-text/70 max-w-2xl mx-auto mb-6">
             Encuentra tu próxima oportunidad profesional en nuestro grupo hostelero
           </p>
           
           <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text/50" size={18} />
             <Input
               placeholder="Buscar por puesto, sector o descripción..."
               value={searchTerm}
@@ -83,10 +83,10 @@ const Jobs = () => {
           </>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
+            <p className="text-text/70 text-lg">
               No se encontraron empleos que coincidan con tu búsqueda.
             </p>
-            <p className="text-gray-400 mt-2">
+            <p className="text-text/50 mt-2">
               Intenta con otras palabras clave.
             </p>
           </div>

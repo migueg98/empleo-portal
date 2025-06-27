@@ -32,7 +32,7 @@ const Header = () => {
     <header className="bg-white border-b border-line shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-lg font-bold text-primary hover:opacity-80 transition-opacity">
+          <Link to="/" className="text-base font-bold text-primary hover:opacity-80 transition-opacity">
             Bolsa de Trabajo
           </Link>
           

@@ -12,7 +12,7 @@ const Home = () => {
   const featuredJobs = mockJobs.slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg text-text">
       <Header />
       
       {/* Hero Section */}
@@ -27,7 +27,7 @@ const Home = () => {
           <Link to="/empleos">
             <Button 
               size="lg" 
-              className="bg-accent hover:bg-primary/90 text-white text-lg px-8 py-3"
+              className="bg-accent hover:bg-accent/90 text-white text-lg px-8 py-3"
             >
               Ver Empleos Disponibles
               <ArrowRight className="ml-2" size={20} />
