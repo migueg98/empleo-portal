@@ -108,7 +108,7 @@ const JobApplication = () => {
       }
 
       // Add candidate to Supabase
-      await addCandidate({
+      const result = await addCandidate({
         jobId,
         fullName: values.fullName,
         age: values.age,
@@ -120,13 +120,17 @@ const JobApplication = () => {
         availability: values.availability,
         relevantExperience: '',
         additionalComments: values.additionalComments,
-        status: 'received',
+        internalStatus: 'nuevo',
         consentGiven: values.consentGiven,
         cvUrl
       });
 
-      toast.success('¡Solicitud enviada con éxito!');
-      navigate('/empleos');
+      if (result.success) {
+        toast.success('¡Solicitud enviada con éxito!');
+        navigate('/empleos');
+      } else {
+        toast.error(result.error || 'Error al enviar la solicitud');
+      }
     } catch (error) {
       console.error('Error submitting application:', error);
       toast.error('Error al enviar la solicitud. Por favor, inténtalo de nuevo.');
