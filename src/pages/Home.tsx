@@ -12,11 +12,11 @@ const Home = () => {
   const featuredJobs = mockJobs.slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-bg">
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary/80 text-white py-16">
+      <section className="bg-primary text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-fade-in">
             Únete a Nuestro Equipo
@@ -27,7 +27,7 @@ const Home = () => {
           <Link to="/empleos">
             <Button 
               size="lg" 
-              className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8 py-3"
+              className="bg-accent hover:bg-primary/90 text-white text-lg px-8 py-3"
             >
               Ver Empleos Disponibles
               <ArrowRight className="ml-2" size={20} />
@@ -37,14 +37,14 @@ const Home = () => {
       </section>
 
       {/* About Section */}
-      <section className="py-16 bg-gray-50" id="quienes-somos">
+      <section className="py-16 bg-white" id="quienes-somos">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
               Quiénes Somos
             </h2>
             <div className="max-w-4xl mx-auto">
-              <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+              <p className="text-lg text-text mb-6 leading-relaxed">
                 Somos un grupo hostelero nacido en Jerez de la Frontera. Gestionamos cuatro tabancos 
                 de tradición centenaria y una distribuidora de bebidas:
               </p>
@@ -70,7 +70,7 @@ const Home = () => {
                   <span>Licojerez (distribuidora de vinos y licores)</span>
                 </div>
               </div>
-              <p className="text-lg text-gray-700 leading-relaxed">
+              <p className="text-lg text-text leading-relaxed">
                 Nuestra misión es ofrecer auténtica gastronomía jerezana y un servicio cercano, 
                 tanto en sala como en distribución.
               </p>
@@ -80,13 +80,13 @@ const Home = () => {
       </section>
 
       {/* Business Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-bg">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
               Nuestros Negocios
             </h2>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-text/70">
               Conoce los establecimientos que forman nuestro grupo hostelero
             </p>
           </div>
@@ -100,13 +100,13 @@ const Home = () => {
       </section>
 
       {/* Featured Jobs */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
               Últimas Oportunidades
             </h2>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-text/70">
               Descubre las posiciones abiertas en nuestro grupo
             </p>
           </div>
@@ -119,7 +119,7 @@ const Home = () => {
 
           <div className="text-center mt-8">
             <Link to="/empleos">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" className="text-primary border-primary hover:bg-primary/10">
                 Ver Todas las Posiciones
               </Button>
             </Link>

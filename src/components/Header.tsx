@@ -19,7 +19,7 @@ const Header = () => {
   const NavLink = ({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) => (
     <Link 
       to={to} 
-      className={`text-sm font-medium hover:text-accent transition-colors ${
+      className={`text-sm font-medium text-primary hover:text-accent transition-colors ${
         location.pathname === to ? 'text-accent' : ''
       }`}
       onClick={onClick}
@@ -29,10 +29,10 @@ const Header = () => {
   );
 
   return (
-    <header className="bg-primary text-primary-foreground shadow-lg">
+    <header className="bg-white border-b border-line shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity">
+          <Link to="/" className="text-lg font-bold text-primary hover:opacity-80 transition-opacity">
             Bolsa de Trabajo
           </Link>
           
@@ -47,7 +47,7 @@ const Header = () => {
           <div className="md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-primary-foreground hover:text-accent">
+                <Button variant="ghost" size="sm" className="text-primary hover:text-accent">
                   <Menu size={20} />
                 </Button>
               </SheetTrigger>
