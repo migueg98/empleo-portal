@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { JobVacancy } from '@/types/job';
 
@@ -11,11 +12,13 @@ interface VacancyFormProps {
   vacancy?: JobVacancy;
   onSave: (vacancy: Omit<JobVacancy, 'id' | 'createdAt'>) => void;
   onCancel: () => void;
+  sectors: { id: number; name: string; }[];
 }
 
-const VacancyForm = ({ vacancy, onSave, onCancel }: VacancyFormProps) => {
+const VacancyForm = ({ vacancy, onSave, onCancel, sectors }: VacancyFormProps) => {
   const [formData, setFormData] = useState({
     sector: vacancy?.sector || '',
+    sectorId: vacancy?.sectorId || (sectors.length > 0 ? sectors[0].id : undefined),
     puesto: vacancy?.puesto || '',
     descripcion: vacancy?.descripcion || '',
     isActive: vacancy?.isActive ?? true
@@ -23,7 +26,15 @@ const VacancyForm = ({ vacancy, onSave, onCancel }: VacancyFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Find the sector name based on selected sectorId
+    const selectedSector = sectors.find(s => s.id === formData.sectorId);
+    
+    onSave({
+      ...formData,
+      sector: selectedSector?.name || formData.sector,
+      sectorId: formData.sectorId
+    });
   };
 
   return (
@@ -38,12 +49,21 @@ const VacancyForm = ({ vacancy, onSave, onCancel }: VacancyFormProps) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="sector">Sector</Label>
-            <Input
-              id="sector"
-              value={formData.sector}
-              onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
-              required
-            />
+            <Select 
+              value={formData.sectorId?.toString()} 
+              onValueChange={(value) => setFormData({ ...formData, sectorId: parseInt(value) })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un sector" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border shadow-md z-50">
+                {sectors.map((sector) => (
+                  <SelectItem key={sector.id} value={sector.id.toString()}>
+                    {sector.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
