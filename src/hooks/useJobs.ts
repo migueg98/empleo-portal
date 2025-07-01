@@ -50,7 +50,6 @@ export const useJobs = () => {
   const addJob = async (jobData: Omit<JobPosition, 'id' | 'createdAt'>) => {
     try {
       console.log('Adding new job:', jobData);
-      // Generate a unique ID for the new job
       const newId = Math.random().toString(36).substring(2, 15);
       
       const { data, error } = await supabase
@@ -61,7 +60,7 @@ export const useJobs = () => {
           description: jobData.description,
           business: jobData.business,
           city: jobData.city,
-          sector: jobData.title, // Using title as sector for now
+          sector: jobData.title,
           is_active: jobData.isActive
         }])
         .select()
@@ -69,10 +68,61 @@ export const useJobs = () => {
 
       if (error) throw error;
       console.log('Successfully added job:', data);
-      await fetchJobs(); // Refresh the list
+      await fetchJobs();
     } catch (error) {
       console.error('Error adding job:', error);
       setError('Error adding job. Please try again.');
+      throw error;
+    }
+  };
+
+  const updateJob = async (id: string, jobData: Partial<Omit<JobPosition, 'id' | 'createdAt'>>) => {
+    try {
+      console.log('Updating job:', id, jobData);
+      
+      const updateData: any = {};
+      if (jobData.title !== undefined) {
+        updateData.title = jobData.title;
+        updateData.sector = jobData.title; // Keep sector in sync with title
+      }
+      if (jobData.description !== undefined) updateData.description = jobData.description;
+      if (jobData.business !== undefined) updateData.business = jobData.business;
+      if (jobData.city !== undefined) updateData.city = jobData.city;
+      if (jobData.isActive !== undefined) updateData.is_active = jobData.isActive;
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      console.log('Successfully updated job:', data);
+      await fetchJobs();
+    } catch (error) {
+      console.error('Error updating job:', error);
+      setError('Error updating job. Please try again.');
+      throw error;
+    }
+  };
+
+  const deleteJob = async (id: string) => {
+    try {
+      console.log('Deleting job:', id);
+      
+      const { error } = await supabase
+        .from('jobs')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      console.log('Successfully deleted job:', id);
+      await fetchJobs();
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      setError('Error deleting job. Please try again.');
+      throw error;
     }
   };
 
@@ -80,14 +130,12 @@ export const useJobs = () => {
     console.log('useJobs: Setting up subscription...');
     fetchJobs();
 
-    // Clean up any existing channel first
     if (channelRef.current) {
       console.log('Cleaning up existing jobs channel...');
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
-    // Set up real-time subscription with unique channel name
     const channelName = `jobs-changes-${Math.random().toString(36).substring(7)}`;
     console.log('Creating new jobs channel:', channelName);
     
@@ -118,5 +166,13 @@ export const useJobs = () => {
     };
   }, []);
 
-  return { jobs, loading, error, addJob, refreshJobs: fetchJobs };
+  return { 
+    jobs, 
+    loading, 
+    error, 
+    addJob, 
+    updateJob, 
+    deleteJob, 
+    refreshJobs: fetchJobs 
+  };
 };
