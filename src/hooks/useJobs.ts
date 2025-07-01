@@ -5,15 +5,30 @@ import { JobPosition } from '@/types/job';
 
 export const useJobs = () => {
   const [jobs, setJobs] = useState<JobPosition[]>([]);
+  const [sectors, setSectors] = useState<{id: number, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<any>(null);
+
+  const fetchSectors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sectors')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setSectors(data || []);
+    } catch (error) {
+      console.error('Error fetching sectors:', error);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
       console.log('Fetching jobs from Supabase...');
       const { data, error } = await supabase
-        .from('jobs')
+        .from('jobs_with_sectors')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -32,7 +47,9 @@ export const useJobs = () => {
         business: job.business,
         city: job.city,
         isActive: job.is_active,
-        createdAt: new Date(job.created_at)
+        createdAt: new Date(job.created_at),
+        sector: job.sector_name || job.sector,
+        sectorId: job.sector_id
       }));
 
       console.log('Transformed jobs:', transformedJobs);
@@ -60,7 +77,8 @@ export const useJobs = () => {
           description: jobData.description,
           business: jobData.business,
           city: jobData.city,
-          sector: jobData.title,
+          sector: jobData.sector,
+          sector_id: jobData.sectorId,
           is_active: jobData.isActive
         }])
         .select()
@@ -81,14 +99,17 @@ export const useJobs = () => {
       console.log('Updating job:', id, jobData);
       
       const updateData: any = {};
-      if (jobData.title !== undefined) {
-        updateData.title = jobData.title;
-        updateData.sector = jobData.title; // Keep sector in sync with title
-      }
+      if (jobData.title !== undefined) updateData.title = jobData.title;
       if (jobData.description !== undefined) updateData.description = jobData.description;
       if (jobData.business !== undefined) updateData.business = jobData.business;
       if (jobData.city !== undefined) updateData.city = jobData.city;
       if (jobData.isActive !== undefined) updateData.is_active = jobData.isActive;
+      if (jobData.sectorId !== undefined) {
+        updateData.sector_id = jobData.sectorId;
+        // Also update the legacy sector field for compatibility
+        const sector = sectors.find(s => s.id === jobData.sectorId);
+        if (sector) updateData.sector = sector.name;
+      }
 
       const { data, error } = await supabase
         .from('jobs')
@@ -97,7 +118,11 @@ export const useJobs = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+      
       console.log('Successfully updated job:', data);
       await fetchJobs();
     } catch (error) {
@@ -128,6 +153,7 @@ export const useJobs = () => {
 
   useEffect(() => {
     console.log('useJobs: Setting up subscription...');
+    fetchSectors();
     fetchJobs();
 
     if (channelRef.current) {
@@ -168,6 +194,7 @@ export const useJobs = () => {
 
   return { 
     jobs, 
+    sectors,
     loading, 
     error, 
     addJob, 

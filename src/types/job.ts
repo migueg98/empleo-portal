@@ -1,4 +1,3 @@
-
 export interface JobPosition {
   id: string;
   title: string;
@@ -7,6 +6,8 @@ export interface JobPosition {
   city: string;
   isActive: boolean;
   createdAt: Date;
+  sector?: string;
+  sectorId?: number;
 }
 
 export interface JobVacancy {
@@ -16,6 +17,7 @@ export interface JobVacancy {
   descripcion: string;
   isActive: boolean;
   createdAt: Date;
+  sectorId?: number;
 }
 
 export interface JobApplication {

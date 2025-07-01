@@ -13,7 +13,7 @@ import { useJobs } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
 
 const VacancyManagement = () => {
-  const { jobs, addJob, updateJob, deleteJob, refreshJobs } = useJobs();
+  const { jobs, sectors, addJob, updateJob, deleteJob, refreshJobs } = useJobs();
   const [showForm, setShowForm] = useState(false);
   const [editingVacancy, setEditingVacancy] = useState<JobVacancy | null>(null);
   const [deletingVacancy, setDeletingVacancy] = useState<JobVacancy | null>(null);
@@ -21,14 +21,15 @@ const VacancyManagement = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
-  // Convert jobs to vacancy format - fix the sector mapping
+  // Convert jobs to vacancy format
   const vacancies: JobVacancy[] = jobs.map(job => ({
     id: job.id,
-    sector: job.title, // Keep sector as title for now to maintain consistency
+    sector: job.sector || 'Sin sector',
     puesto: job.title,
     descripcion: job.description,
     isActive: job.isActive,
-    createdAt: job.createdAt
+    createdAt: job.createdAt,
+    sectorId: job.sectorId
   }));
 
   const handleCreateVacancy = async (vacancyData: Omit<JobVacancy, 'id' | 'createdAt'>) => {
@@ -40,7 +41,9 @@ const VacancyManagement = () => {
         description: vacancyData.descripcion,
         business: 'Empresa Principal',
         city: 'Jerez de la Frontera',
-        isActive: vacancyData.isActive
+        isActive: vacancyData.isActive,
+        sector: vacancyData.sector,
+        sectorId: vacancyData.sectorId
       };
 
       await addJob(jobData);
@@ -62,13 +65,14 @@ const VacancyManagement = () => {
     }
   };
 
-  const handleEditVacancy = async (id: string, data: { title: string; description: string }) => {
+  const handleEditVacancy = async (id: string, data: { title: string; description: string; sectorId: number }) => {
     try {
       console.log('Updating vacancy:', id, data);
       
       await updateJob(id, {
         title: data.title,
-        description: data.description
+        description: data.description,
+        sectorId: data.sectorId
       });
       
       toast({
@@ -129,6 +133,7 @@ const VacancyManagement = () => {
       <VacancyForm
         onSave={handleCreateVacancy}
         onCancel={handleCancel}
+        sectors={sectors}
       />
     );
   }
@@ -219,6 +224,7 @@ const VacancyManagement = () => {
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
         onSave={handleEditVacancy}
+        sectors={sectors}
       />
 
       <VacancyDeleteDialog

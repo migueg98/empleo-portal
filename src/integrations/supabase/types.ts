@@ -78,6 +78,7 @@ export type Database = {
           id: string
           is_active: boolean
           sector: string
+          sector_id: number
           title: string
           updated_at: string
         }
@@ -89,6 +90,7 @@ export type Database = {
           id: string
           is_active?: boolean
           sector: string
+          sector_id: number
           title: string
           updated_at?: string
         }
@@ -100,8 +102,35 @@ export type Database = {
           id?: string
           is_active?: boolean
           sector?: string
+          sector_id?: number
           title?: string
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sectors: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
         }
         Relationships: []
       }
@@ -136,6 +165,30 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      jobs_with_sectors: {
+        Row: {
+          business: string | null
+          city: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          sector: string | null
+          sector_id: number | null
+          sector_name: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { JobVacancy } from '@/types/job';
 import { Loader2 } from 'lucide-react';
@@ -12,12 +13,13 @@ interface VacancyEditDialogProps {
   vacancy: JobVacancy | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (id: string, data: { title: string; description: string }) => Promise<void>;
+  onSave: (id: string, data: { title: string; description: string; sectorId: number }) => Promise<void>;
+  sectors: {id: number, name: string}[];
 }
 
-const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditDialogProps) => {
+const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave, sectors }: VacancyEditDialogProps) => {
   const [formData, setFormData] = useState({
-    sector: '',
+    sectorId: 0,
     puesto: '',
     descripcion: ''
   });
@@ -25,14 +27,14 @@ const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditD
 
   // Update form data when vacancy changes
   useEffect(() => {
-    if (vacancy) {
+    if (vacancy && open) {
       setFormData({
-        sector: vacancy.sector,
+        sectorId: vacancy.sectorId || 0,
         puesto: vacancy.puesto,
         descripcion: vacancy.descripcion
       });
     }
-  }, [vacancy]);
+  }, [vacancy, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +42,7 @@ const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditD
     if (!vacancy) return;
     
     // Validate inputs
-    if (!formData.sector.trim() || !formData.puesto.trim() || !formData.descripcion.trim()) {
+    if (!formData.sectorId || !formData.puesto.trim() || !formData.descripcion.trim()) {
       return;
     }
 
@@ -49,7 +51,8 @@ const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditD
     try {
       await onSave(vacancy.id, {
         title: formData.puesto,
-        description: formData.descripcion
+        description: formData.descripcion,
+        sectorId: formData.sectorId
       });
       onOpenChange(false);
     } catch (error) {
@@ -62,13 +65,15 @@ const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditD
   const handleCancel = () => {
     if (vacancy) {
       setFormData({
-        sector: vacancy.sector,
+        sectorId: vacancy.sectorId || 0,
         puesto: vacancy.puesto,
         descripcion: vacancy.descripcion
       });
     }
     onOpenChange(false);
   };
+
+  const selectedSector = sectors.find(s => s.id === formData.sectorId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,14 +88,22 @@ const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditD
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="sector">Sector</Label>
-            <Input
-              id="sector"
-              value={formData.sector}
-              onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
-              placeholder="Ej: Hostelería"
-              required
+            <Select 
+              value={formData.sectorId.toString()} 
+              onValueChange={(value) => setFormData({ ...formData, sectorId: parseInt(value) })}
               disabled={isLoading}
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar sector" />
+              </SelectTrigger>
+              <SelectContent>
+                {sectors.map((sector) => (
+                  <SelectItem key={sector.id} value={sector.id.toString()}>
+                    {sector.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -129,7 +142,7 @@ const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditD
             </Button>
             <Button 
               type="submit" 
-              disabled={isLoading || !formData.sector.trim() || !formData.puesto.trim() || !formData.descripcion.trim()}
+              disabled={isLoading || !formData.sectorId || !formData.puesto.trim() || !formData.descripcion.trim()}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Guardar Cambios

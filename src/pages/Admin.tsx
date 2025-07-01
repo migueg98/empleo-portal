@@ -28,7 +28,7 @@ const Admin = () => {
   const [selectedPositionExperience, setSelectedPositionExperience] = useState<string>('all');
   
   const { candidates, loading: candidatesLoading, error: candidatesError, updateCandidateStatus, refreshCandidates } = useCandidates();
-  const { jobs, loading: jobsLoading, error: jobsError, refreshJobs } = useJobs();
+  const { jobs, sectors, loading: jobsLoading, error: jobsError, refreshJobs } = useJobs();
 
   useEffect(() => {
     const checkAuth = () => {
@@ -49,12 +49,6 @@ const Admin = () => {
     navigate('/');
   };
 
-  // Get unique sectors from jobs
-  const availableSectors = useMemo(() => {
-    const sectors = jobs.map(job => job.title).filter(Boolean);
-    return [...new Set(sectors)];
-  }, [jobs]);
-
   const filteredApplications = useMemo(() => {
     if (!candidates || candidates.length === 0) return [];
     
@@ -67,7 +61,7 @@ const Admin = () => {
         (job?.title.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesJob = selectedJob === 'all' || app.jobId === selectedJob;
-      const matchesSector = selectedSector === 'all' || (job && job.title === selectedSector);
+      const matchesSector = selectedSector === 'all' || (job && job.sector === selectedSector);
       const matchesSectorExperience = selectedSectorExperience === 'all' || app.sectorExperience === selectedSectorExperience;
       const matchesPositionExperience = selectedPositionExperience === 'all' || app.positionExperience === selectedPositionExperience;
       
@@ -264,8 +258,8 @@ const Admin = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-white border shadow-md z-50">
                       <SelectItem value="all">Todos los sectores</SelectItem>
-                      {availableSectors.map((sector) => (
-                        <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                      {sectors.map((sector) => (
+                        <SelectItem key={sector.id} value={sector.name}>{sector.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
