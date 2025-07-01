@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import KanbanBoard from '@/components/admin/KanbanBoard';
 import VacancyManagement from '@/components/admin/VacancyManagement';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +17,7 @@ import { Search, Users, Briefcase, AlertCircle, RefreshCw, LogOut } from 'lucide
 import { useCandidates } from '@/hooks/useCandidates';
 import { useJobs } from '@/hooks/useJobs';
 
-const Admin = () => {
+const AdminContent = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const navigate = useNavigate();
@@ -49,11 +50,12 @@ const Admin = () => {
     navigate('/');
   };
 
+  // Safe data filtering with null checks
   const filteredApplications = useMemo(() => {
-    if (!candidates || candidates.length === 0) return [];
+    if (!candidates || !Array.isArray(candidates)) return [];
     
     return candidates.filter(app => {
-      const job = jobs.find(j => j.id === app.jobId);
+      const job = jobs?.find(j => j.id === app.jobId);
       
       const matchesSearch = !searchTerm || 
         app.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,7 +72,7 @@ const Admin = () => {
   }, [candidates, jobs, searchTerm, selectedJob, selectedSector, selectedSectorExperience, selectedPositionExperience]);
 
   const statistics = useMemo(() => {
-    if (!candidates || candidates.length === 0) {
+    if (!candidates || !Array.isArray(candidates)) {
       return { total: 0, nuevo: 0, no_valido: 0, posible: 0, buen_candidato: 0 };
     }
     
@@ -232,7 +234,7 @@ const Admin = () => {
               </Card>
             </div>
 
-            {/* Filters with clear labels */}
+            {/* Filters with clear labels - using sectors data */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Filtros de Búsqueda</CardTitle>
@@ -258,7 +260,7 @@ const Admin = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-white border shadow-md z-50">
                       <SelectItem value="all">Todos los sectores</SelectItem>
-                      {sectors.map((sector) => (
+                      {sectors && sectors.map((sector) => (
                         <SelectItem key={sector.id} value={sector.name}>{sector.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -270,7 +272,7 @@ const Admin = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-white border shadow-md z-50">
                       <SelectItem value="all">Todos los puestos</SelectItem>
-                      {jobs.map((job) => (
+                      {jobs && jobs.map((job) => (
                         <SelectItem key={job.id} value={job.id}>{job.title}</SelectItem>
                       ))}
                     </SelectContent>
@@ -307,9 +309,9 @@ const Admin = () => {
               </CardContent>
             </Card>
 
-            {/* Kanban Board */}
+            {/* Kanban Board with safe data */}
             <KanbanBoard 
-              applications={filteredApplications}
+              applications={filteredApplications || []}
               onStatusChange={updateCandidateStatus}
             />
           </TabsContent>
@@ -322,6 +324,14 @@ const Admin = () => {
 
       <Footer />
     </div>
+  );
+};
+
+const Admin = () => {
+  return (
+    <ErrorBoundary>
+      <AdminContent />
+    </ErrorBoundary>
   );
 };
 

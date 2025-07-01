@@ -1,270 +1,228 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Trash2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useJobs } from '@/hooks/useJobs';
-import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Search, Mail, Phone, Calendar, FileText, ExternalLink } from 'lucide-react';
+import { useCandidates } from '@/hooks/useCandidates';
 
-interface CandidateApplication {
-  id: string;
-  jobId: string;
-  appliedDate: string;
-  email: string;
-}
+const CandidatePortalContent = () => {
+  const [email, setEmail] = useState('');
+  const [searchPerformed, setSearchPerformed] = useState(false);
+  const { candidates, loading } = useCandidates();
 
-const CandidatePortal = () => {
-  const [applications, setApplications] = useState<CandidateApplication[]>([]);
-  const [candidateEmail, setCandidateEmail] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
-  const { jobs } = useJobs();
-  const { toast } = useToast();
-
-  const fetchApplications = async (email: string) => {
-    if (!email) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('candidates')
-        .select('id, job_id, created_at, email')
-        .eq('email', email)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const transformedApplications: CandidateApplication[] = data.map(candidate => ({
-        id: candidate.id,
-        jobId: candidate.job_id,
-        appliedDate: candidate.created_at,
-        email: candidate.email
-      }));
-
-      setApplications(transformedApplications);
-    } catch (error) {
-      console.error('Error fetching applications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteMyData = async () => {
-    if (!candidateEmail) return;
-    
-    setDeleting(true);
-    try {
-      // Delete all candidate records for this email
-      const { error } = await supabase
-        .from('candidates')
-        .delete()
-        .eq('email', candidateEmail);
-
-      if (error) throw error;
-
-      // Clear local state
-      setApplications([]);
-      localStorage.removeItem('candidateEmail');
-      setCandidateEmail('');
-      
-      toast({
-        title: "Datos eliminados",
-        description: "Tus datos han sido eliminados con éxito.",
-      });
-    } catch (error) {
-      console.error('Error deleting data:', error);
-      toast({
-        title: "Error",
-        description: "No se pudieron eliminar los datos. Inténtalo de nuevo.",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const getJobTitle = (jobId: string) => {
-    const job = jobs.find(j => j.id === jobId);
-    return job?.title || 'Puesto no encontrado';
-  };
-
-  useEffect(() => {
-    // For demonstration, we'll use a simple email input
-    // In a real app, this would come from authentication
-    const email = localStorage.getItem('candidateEmail');
-    if (email) {
-      setCandidateEmail(email);
-      fetchApplications(email);
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get('email') as string;
-    if (email) {
-      localStorage.setItem('candidateEmail', email);
-      setCandidateEmail(email);
-      setLoading(true);
-      fetchApplications(email);
+    setSearchPerformed(true);
+  };
+
+  // Safe filtering with null checks
+  const userApplications = (candidates || []).filter(app => 
+    searchPerformed && email && app.email.toLowerCase() === email.toLowerCase()
+  );
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'nuevo':
+        return 'bg-blue-100 text-blue-800';
+      case 'no_valido':
+        return 'bg-red-100 text-red-800';
+      case 'posible':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'buen_candidato':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <p className="text-lg text-gray-600">Cargando candidaturas...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'nuevo':
+        return 'En revisión';
+      case 'no_valido':
+        return 'No válido';
+      case 'posible':
+        return 'Candidato posible';
+      case 'buen_candidato':
+        return 'Buen candidato';
+      default:
+        return 'Desconocido';
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg text-text">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-              Mis Candidaturas
+              Portal del Candidato
             </h1>
-            <p className="text-lg text-gray-600">
-              Consulta tus postulaciones
+            <p className="text-lg text-text/70 mb-6">
+              Consulta el estado de tus postulaciones
             </p>
           </div>
 
-          {!candidateEmail ? (
-            <Card className="max-w-md mx-auto">
-              <CardHeader>
-                <CardTitle>Acceder a mis candidaturas</CardTitle>
-                <CardDescription>
-                  Introduce tu email para ver tus postulaciones
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleEmailSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="tu@email.com"
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">
-                    Ver mis candidaturas
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <div className="text-center mb-6">
-                <p className="text-gray-600">
-                  Mostrando candidaturas para: <strong>{candidateEmail}</strong>
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    localStorage.removeItem('candidateEmail');
-                    setCandidateEmail('');
-                    setApplications([]);
-                  }}
-                  className="mt-2"
-                >
-                  Cambiar email
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search size={20} />
+                Buscar mis candidaturas
+              </CardTitle>
+              <CardDescription>
+                Introduce tu email para ver el estado de tus postulaciones
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSearch} className="flex gap-4">
+                <Input
+                  type="email"
+                  placeholder="tu-email@ejemplo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1"
+                  required
+                />
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Buscando...' : 'Buscar'}
                 </Button>
-              </div>
+              </form>
+            </CardContent>
+          </Card>
 
-              {applications.length > 0 ? (
-                <div className="space-y-6">
-                  {applications.map((application) => (
-                    <Card key={application.id} className="hover:shadow-md transition-shadow">
+          {searchPerformed && (
+            <div>
+              {userApplications.length > 0 ? (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold text-primary mb-4">
+                    Tus candidaturas ({userApplications.length})
+                  </h2>
+                  
+                  {userApplications.map((application) => (
+                    <Card key={application.id} className="border-l-4 border-l-primary">
                       <CardHeader>
                         <div className="flex justify-between items-start">
                           <div>
-                            <CardTitle className="text-xl text-primary mb-2">
-                              {getJobTitle(application.jobId)}
+                            <CardTitle className="text-lg">
+                              Postulación - {application.jobId}
                             </CardTitle>
-                            <CardDescription className="flex items-center gap-2 text-sm">
-                              <Calendar size={14} />
-                              <span>Postulado: {new Date(application.appliedDate).toLocaleDateString('es-ES')}</span>
+                            <CardDescription className="flex items-center gap-4 mt-2">
+                              <span className="flex items-center gap-1">
+                                <Mail size={14} />
+                                {application.email}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Phone size={14} />
+                                {application.phone}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar size={14} />
+                                {new Date(application.createdAt).toLocaleDateString()}
+                              </span>
                             </CardDescription>
                           </div>
+                          <Badge className={getStatusColor(application.internalStatus)}>
+                            {getStatusText(application.internalStatus)}
+                          </Badge>
                         </div>
                       </CardHeader>
+                      <CardContent>
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p><strong>Edad:</strong> {application.age} años</p>
+                            <p><strong>Disponibilidad:</strong> {application.availability}</p>
+                            <p><strong>Experiencia en el sector:</strong> {application.sectorExperience}</p>
+                            <p><strong>Experiencia en el puesto:</strong> {application.positionExperience}</p>
+                          </div>
+                          <div>
+                            {application.selectedPositions.length > 0 && (
+                              <div className="mb-2">
+                                <strong>Posiciones seleccionadas:</strong>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {application.selectedPositions.map((position, index) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {position}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {application.cvUrl && (
+                              <div className="mt-2">
+                                <Button variant="outline" size="sm" asChild>
+                                  <a 
+                                    href={application.cvUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1"
+                                  >
+                                    <FileText size={14} />
+                                    Ver CV
+                                    <ExternalLink size={12} />
+                                  </a>
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {application.relevantExperience && (
+                          <div className="mt-4 p-3 bg-gray-50 rounded">
+                            <strong className="block mb-1">Experiencia relevante:</strong>
+                            <p className="text-sm text-gray-700">{application.relevantExperience}</p>
+                          </div>
+                        )}
+                        
+                        {application.additionalComments && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded">
+                            <strong className="block mb-1">Comentarios adicionales:</strong>
+                            <p className="text-sm text-blue-700">{application.additionalComments}</p>
+                          </div>
+                        )}
+                      </CardContent>
                     </Card>
                   ))}
-                  
-                  <Card className="border-red-200 bg-red-50">
-                    <CardHeader>
-                      <CardTitle className="text-red-800 text-lg">
-                        Protección de Datos
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-red-700 text-sm mb-4">
-                        Si deseas eliminar todos tus datos personales de nuestro sistema, 
-                        puedes ejercer tu derecho al olvido.
-                      </p>
-                      <Alert className="mb-4 border-red-300 bg-red-50">
-                        <AlertDescription className="text-red-700">
-                          <strong>Atención:</strong> Esta acción eliminará permanentemente todos tus datos 
-                          y candidaturas. No se puede deshacer.
-                        </AlertDescription>
-                      </Alert>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={deleteMyData}
-                        disabled={deleting}
-                        className="flex items-center gap-2"
-                      >
-                        <Trash2 size={16} />
-                        {deleting ? 'Eliminando...' : 'Eliminar mis datos'}
-                      </Button>
-                    </CardContent>
-                  </Card>
                 </div>
               ) : (
                 <Card>
                   <CardContent className="text-center py-12">
-                    <p className="text-gray-500 text-lg mb-4">
-                      No tienes candidaturas activas
+                    <p className="text-text/70 text-lg mb-4">
+                      No se encontraron candidaturas para este email.
                     </p>
-                    <p className="text-gray-400 mb-6">
-                      Explora nuestras ofertas de empleo y postúlate a las que más te interesen
+                    <p className="text-text/50 mb-6">
+                      Verifica que hayas introducido el email correcto o 
                     </p>
-                    <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                      Ver empleos disponibles
-                    </Button>
+                    <Link to="/empleos">
+                      <Button variant="outline">
+                        Ver empleos disponibles
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
 
       <Footer />
     </div>
+  );
+};
+
+const CandidatePortal = () => {
+  return (
+    <ErrorBoundary>
+      <CandidatePortalContent />
+    </ErrorBoundary>
   );
 };
 

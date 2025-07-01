@@ -3,29 +3,32 @@ import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import VacancyCard from '@/components/VacancyCard';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useJobs } from '@/hooks/useJobs';
 
-const Jobs = () => {
+const JobsContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { jobs, loading } = useJobs();
 
-  const filteredJobs = jobs.filter(job => 
+  // Safe filtering with null checks
+  const filteredJobs = (jobs || []).filter(job => 
     job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.business.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (job.sector && job.sector.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Convert jobs to vacancy format for VacancyCard
+  // Convert jobs to vacancy format for VacancyCard with null safety
   const vacancies = filteredJobs.map(job => ({
     id: job.id,
     sector: job.sector || 'Sin sector',
     puesto: job.title,
     descripcion: job.description,
     isActive: job.isActive,
-    createdAt: job.createdAt
+    createdAt: job.createdAt,
+    sectorId: job.sectorId
   }));
 
   if (loading) {
@@ -96,6 +99,14 @@ const Jobs = () => {
 
       <Footer />
     </div>
+  );
+};
+
+const Jobs = () => {
+  return (
+    <ErrorBoundary>
+      <JobsContent />
+    </ErrorBoundary>
   );
 };
 

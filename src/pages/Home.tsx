@@ -3,13 +3,31 @@ import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BusinessCard from '@/components/BusinessCard';
-import JobCard from '@/components/JobCard';
+import VacancyCard from '@/components/VacancyCard';
 import { Button } from '@/components/ui/button';
-import { mockJobs, businesses } from '@/data/mockJobs';
+import { businesses } from '@/data/mockJobs';
 import { Users, Heart, Wine, ArrowRight } from 'lucide-react';
+import { useJobs } from '@/hooks/useJobs';
 
 const Home = () => {
-  const featuredJobs = mockJobs.slice(0, 3);
+  const { jobs, loading } = useJobs();
+  
+  // Get the 3 most recent active jobs
+  const featuredJobs = jobs
+    .filter(job => job.isActive)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
+
+  // Convert jobs to vacancy format for VacancyCard
+  const featuredVacancies = featuredJobs.map(job => ({
+    id: job.id,
+    sector: job.sector || 'Sin sector',
+    puesto: job.title,
+    descripcion: job.description,
+    isActive: job.isActive,
+    createdAt: job.createdAt,
+    sectorId: job.sectorId
+  }));
 
   return (
     <div className="min-h-screen bg-bg text-text">
@@ -111,19 +129,36 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center">
+              <p className="text-lg text-text/70">Cargando oportunidades...</p>
+            </div>
+          ) : featuredVacancies.length > 0 ? (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredVacancies.map((vacancy) => (
+                  <VacancyCard key={vacancy.id} vacancy={vacancy} />
+                ))}
+              </div>
 
-          <div className="text-center mt-8">
-            <Link to="/empleos">
-              <Button variant="outline" size="lg" className="text-primary border-primary hover:bg-primary/10">
-                Ver Todas las Posiciones
-              </Button>
-            </Link>
-          </div>
+              <div className="text-center mt-8">
+                <Link to="/empleos">
+                  <Button variant="outline" size="lg" className="text-primary border-primary hover:bg-primary/10">
+                    Ver Todas las Posiciones
+                  </Button>
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-text/70 text-lg mb-4">
+                No hay oportunidades disponibles en este momento.
+              </p>
+              <p className="text-text/50">
+                ¡Vuelve pronto para ver nuevas posiciones!
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
