@@ -23,6 +23,7 @@ const Admin = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJob, setSelectedJob] = useState<string>('all');
+  const [selectedSector, setSelectedSector] = useState<string>('all');
   const [selectedSectorExperience, setSelectedSectorExperience] = useState<string>('all');
   const [selectedPositionExperience, setSelectedPositionExperience] = useState<string>('all');
   
@@ -48,6 +49,12 @@ const Admin = () => {
     navigate('/');
   };
 
+  // Get unique sectors from jobs
+  const availableSectors = useMemo(() => {
+    const sectors = jobs.map(job => job.title).filter(Boolean);
+    return [...new Set(sectors)];
+  }, [jobs]);
+
   const filteredApplications = useMemo(() => {
     if (!candidates || candidates.length === 0) return [];
     
@@ -60,12 +67,13 @@ const Admin = () => {
         (job?.title.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesJob = selectedJob === 'all' || app.jobId === selectedJob;
+      const matchesSector = selectedSector === 'all' || (job && job.title === selectedSector);
       const matchesSectorExperience = selectedSectorExperience === 'all' || app.sectorExperience === selectedSectorExperience;
       const matchesPositionExperience = selectedPositionExperience === 'all' || app.positionExperience === selectedPositionExperience;
       
-      return matchesSearch && matchesJob && matchesSectorExperience && matchesPositionExperience;
+      return matchesSearch && matchesJob && matchesSector && matchesSectorExperience && matchesPositionExperience;
     });
-  }, [candidates, jobs, searchTerm, selectedJob, selectedSectorExperience, selectedPositionExperience]);
+  }, [candidates, jobs, searchTerm, selectedJob, selectedSector, selectedSectorExperience, selectedPositionExperience]);
 
   const statistics = useMemo(() => {
     if (!candidates || candidates.length === 0) {
@@ -239,7 +247,7 @@ const Admin = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <Input
@@ -249,6 +257,18 @@ const Admin = () => {
                       className="pl-9"
                     />
                   </div>
+                  
+                  <Select value={selectedSector} onValueChange={setSelectedSector}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar sector" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border shadow-md z-50">
+                      <SelectItem value="all">Todos los sectores</SelectItem>
+                      {availableSectors.map((sector) => (
+                        <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   
                   <Select value={selectedJob} onValueChange={setSelectedJob}>
                     <SelectTrigger>

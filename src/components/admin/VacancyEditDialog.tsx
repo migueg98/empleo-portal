@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,7 +24,7 @@ const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditD
   const [isLoading, setIsLoading] = useState(false);
 
   // Update form data when vacancy changes
-  useState(() => {
+  useEffect(() => {
     if (vacancy) {
       setFormData({
         sector: vacancy.sector,
@@ -32,7 +32,7 @@ const VacancyEditDialog = ({ vacancy, open, onOpenChange, onSave }: VacancyEditD
         descripcion: vacancy.descripcion
       });
     }
-  });
+  }, [vacancy]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

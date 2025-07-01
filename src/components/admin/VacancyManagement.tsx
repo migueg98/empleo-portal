@@ -21,10 +21,10 @@ const VacancyManagement = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
-  // Convert jobs to vacancy format
+  // Convert jobs to vacancy format - fix the sector mapping
   const vacancies: JobVacancy[] = jobs.map(job => ({
     id: job.id,
-    sector: job.title,
+    sector: job.title, // Keep sector as title for now to maintain consistency
     puesto: job.title,
     descripcion: job.description,
     isActive: job.isActive,
@@ -64,6 +64,8 @@ const VacancyManagement = () => {
 
   const handleEditVacancy = async (id: string, data: { title: string; description: string }) => {
     try {
+      console.log('Updating vacancy:', id, data);
+      
       await updateJob(id, {
         title: data.title,
         description: data.description
