@@ -7,13 +7,14 @@ import { JobVacancy } from '@/types/job';
 import VacancyForm from './VacancyForm';
 import VacancyEditDialog from './VacancyEditDialog';
 import VacancyDeleteDialog from './VacancyDeleteDialog';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useJobs } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const VacancyManagement = () => {
-  const { jobs, sectors, addJob, updateJob, deleteJob, refreshJobs } = useJobs();
+  const { jobs, sectors, loading, error, addJob, updateJob, deleteJob, refreshJobs } = useJobs();
   const [showForm, setShowForm] = useState(false);
   const [editingVacancy, setEditingVacancy] = useState<JobVacancy | null>(null);
   const [deletingVacancy, setDeletingVacancy] = useState<JobVacancy | null>(null);
@@ -21,8 +22,8 @@ const VacancyManagement = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
-  // Convert jobs to vacancy format
-  const vacancies: JobVacancy[] = jobs.map(job => ({
+  // Convert jobs to vacancy format with null safety
+  const vacancies: JobVacancy[] = (jobs || []).map(job => ({
     id: job.id,
     sector: job.sector || 'Sin sector',
     puesto: job.title,
@@ -47,21 +48,11 @@ const VacancyManagement = () => {
       };
 
       await addJob(jobData);
-      
-      toast({
-        title: "Vacante creada",
-        description: "La nueva vacante se ha creado exitosamente.",
-      });
-      
       setShowForm(false);
-      await refreshJobs();
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error creating vacancy:', error);
-      toast({
-        title: "Error",
-        description: "Hubo un error al crear la vacante. Por favor, inténtalo de nuevo.",
-        variant: "destructive",
-      });
+      // Error handling is already done in addJob function
     }
   };
 
@@ -75,41 +66,20 @@ const VacancyManagement = () => {
         sectorId: data.sectorId
       });
       
-      toast({
-        title: "Vacante actualizada",
-        description: "Los cambios se han guardado exitosamente.",
-      });
-      
-      await refreshJobs();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating vacancy:', error);
-      toast({
-        title: "Error",
-        description: "Hubo un error al actualizar la vacante. Por favor, inténtalo de nuevo.",
-        variant: "destructive",
-      });
-      throw error;
+      // Error handling is already done in updateJob function
+      throw error; // Re-throw to let the dialog handle it
     }
   };
 
   const handleDeleteVacancy = async (id: string) => {
     try {
       await deleteJob(id);
-      
-      toast({
-        title: "Vacante eliminada",
-        description: "La vacante se ha eliminado exitosamente.",
-      });
-      
-      await refreshJobs();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting vacancy:', error);
-      toast({
-        title: "Error",
-        description: "Hubo un error al eliminar la vacante. Por favor, inténtalo de nuevo.",
-        variant: "destructive",
-      });
-      throw error;
+      // Error handling is already done in deleteJob function
+      throw error; // Re-throw to let the dialog handle it
     }
   };
 
@@ -127,6 +97,35 @@ const VacancyManagement = () => {
     setShowForm(false);
     setEditingVacancy(null);
   };
+
+  const handleRetry = () => {
+    refreshJobs();
+  };
+
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-red-500" />
+            Error al cargar vacantes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="mb-4">
+              {error}
+            </AlertDescription>
+          </Alert>
+          <Button onClick={handleRetry} variant="outline" className="mt-4">
+            Reintentar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (showForm) {
     return (
@@ -149,7 +148,11 @@ const VacancyManagement = () => {
                 Administra las vacantes disponibles en el portal de empleo
               </CardDescription>
             </div>
-            <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+            <Button 
+              onClick={() => setShowForm(true)} 
+              className="flex items-center gap-2"
+              disabled={loading}
+            >
               <Plus size={16} />
               Nueva Vacante
             </Button>
@@ -169,7 +172,13 @@ const VacancyManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vacancies.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      Cargando vacantes...
+                    </TableCell>
+                  </TableRow>
+                ) : vacancies.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                       No hay vacantes disponibles. Haz clic en "Nueva Vacante" para crear una.
@@ -196,6 +205,7 @@ const VacancyManagement = () => {
                             size="sm"
                             onClick={() => startEdit(vacancy)}
                             title="Editar vacante"
+                            disabled={loading}
                           >
                             <Edit size={14} />
                           </Button>
@@ -205,6 +215,7 @@ const VacancyManagement = () => {
                             onClick={() => startDelete(vacancy)}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             title="Eliminar vacante"
+                            disabled={loading}
                           >
                             <Trash2 size={14} />
                           </Button>

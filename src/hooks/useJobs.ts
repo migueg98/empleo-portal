@@ -14,26 +14,32 @@ export const useJobs = () => {
 
   const fetchSectors = async () => {
     try {
+      console.log('Fetching sectors...');
       const { data, error } = await supabase
         .from('sectors')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sectors fetch error:', error);
+        throw error;
+      }
+      
+      console.log('Sectors fetched successfully:', data);
       setSectors(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching sectors:', error);
-      toast({
-        title: "Error",
-        description: "Error al cargar sectores. Revisa la consola para más detalles.",
-        variant: "destructive",
-      });
+      setError(`Error loading sectors: ${error.message}`);
+      setSectors([]); // Fallback to empty array
     }
   };
 
   const fetchJobs = async () => {
     try {
       console.log('Fetching jobs from Supabase...');
+      setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('jobs_with_sectors')
         .select('*')
@@ -41,7 +47,7 @@ export const useJobs = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Jobs fetch error:', error);
         throw error;
       }
 
@@ -49,14 +55,14 @@ export const useJobs = () => {
 
       const transformedJobs: JobPosition[] = (data || []).map(job => ({
         id: job.id,
-        title: job.title,
-        description: job.description,
-        business: job.business,
-        city: job.city,
-        isActive: job.is_active,
+        title: job.title || 'Sin título',
+        description: job.description || 'Sin descripción',
+        business: job.business || 'Empresa Principal',
+        city: job.city || 'Jerez de la Frontera',
+        isActive: job.is_active || false,
         createdAt: new Date(job.created_at),
-        sector: job.sector_name || job.sector,
-        sectorId: job.sector_id
+        sector: job.sector_name || job.sector || 'Sin sector',
+        sectorId: job.sector_id || 0
       }));
 
       console.log('Transformed jobs:', transformedJobs);
@@ -64,11 +70,13 @@ export const useJobs = () => {
       setError(null);
     } catch (error: any) {
       console.error('Error fetching jobs:', error);
-      setError('Error loading jobs. Please try again.');
-      setJobs([]);
+      const errorMessage = error.message || 'Unknown error occurred';
+      setError(`Error loading jobs: ${errorMessage}`);
+      setJobs([]); // Fallback to empty array
+      
       toast({
-        title: "Error",
-        description: "Error al cargar empleos. Revisa la consola para más detalles.",
+        title: "Error al cargar empleos",
+        description: `No se pudieron cargar los empleos: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
@@ -96,20 +104,27 @@ export const useJobs = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Job creation error:', error);
+        throw error;
+      }
       
       console.log('Successfully added job:', data);
-      await fetchJobs(); // Refresh the jobs list
       
       toast({
         title: "Éxito",
         description: "Vacante creada correctamente.",
       });
+
+      await fetchJobs(); // Refresh the jobs list
+      
     } catch (error: any) {
       console.error('Error adding job:', error);
+      const errorMessage = error.message || 'Error desconocido';
+      
       toast({
-        title: "Error",
-        description: "Error al crear la vacante. Revisa la consola para más detalles.",
+        title: "Error al crear vacante",
+        description: `No se pudo crear la vacante: ${errorMessage}`,
         variant: "destructive",
       });
       throw error;
@@ -141,22 +156,26 @@ export const useJobs = () => {
         .single();
 
       if (error) {
-        console.error('Supabase update error:', error);
+        console.error('Job update error:', error);
         throw error;
       }
       
       console.log('Successfully updated job:', data);
-      await fetchJobs(); // Refresh the jobs list
       
       toast({
         title: "Éxito",
         description: "Vacante actualizada correctamente.",
       });
+
+      await fetchJobs(); // Refresh the jobs list
+      
     } catch (error: any) {
       console.error('Error updating job:', error);
+      const errorMessage = error.message || 'Error desconocido';
+      
       toast({
-        title: "Error",
-        description: "Error al actualizar la vacante. Revisa la consola para más detalles.",
+        title: "Error al actualizar vacante",
+        description: `No se pudo actualizar la vacante: ${errorMessage}`,
         variant: "destructive",
       });
       throw error;
@@ -172,20 +191,27 @@ export const useJobs = () => {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Job deletion error:', error);
+        throw error;
+      }
       
       console.log('Successfully deleted job:', id);
-      await fetchJobs(); // Refresh the jobs list
       
       toast({
         title: "Éxito",
         description: "Vacante eliminada correctamente.",
       });
+
+      await fetchJobs(); // Refresh the jobs list
+      
     } catch (error: any) {
       console.error('Error deleting job:', error);
+      const errorMessage = error.message || 'Error desconocido';
+      
       toast({
-        title: "Error",
-        description: "Error al eliminar la vacante. Revisa la consola para más detalles.",
+        title: "Error al eliminar vacante",
+        description: `No se pudo eliminar la vacante: ${errorMessage}`,
         variant: "destructive",
       });
       throw error;
@@ -193,16 +219,31 @@ export const useJobs = () => {
   };
 
   useEffect(() => {
-    console.log('useJobs: Setting up subscription...');
-    fetchSectors();
-    fetchJobs();
+    console.log('useJobs: Setting up...');
+    
+    const initializeJobs = async () => {
+      try {
+        await fetchSectors();
+        await fetchJobs();
+      } catch (error) {
+        console.error('Failed to initialize jobs:', error);
+      }
+    };
 
+    initializeJobs();
+
+    // Clean up any existing channel first
     if (channelRef.current) {
       console.log('Cleaning up existing jobs channel...');
-      supabase.removeChannel(channelRef.current);
+      try {
+        supabase.removeChannel(channelRef.current);
+      } catch (cleanupError) {
+        console.warn('Error cleaning up existing channel:', cleanupError);
+      }
       channelRef.current = null;
     }
 
+    // Set up real-time subscription with better error handling
     const channelName = `jobs-changes-${Math.random().toString(36).substring(7)}`;
     console.log('Creating new jobs channel:', channelName);
     
@@ -219,15 +260,24 @@ export const useJobs = () => {
         })
         .subscribe((status) => {
           console.log('Jobs channel subscription status:', status);
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Failed to subscribe to jobs channel - real-time updates may not work');
+            // Don't set error state for subscription failures, just log
+          }
         });
     } catch (error) {
       console.error('Error setting up jobs real-time subscription:', error);
+      // Don't block the app if real-time fails
     }
 
     return () => {
       console.log('useJobs: Cleaning up...');
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+        try {
+          supabase.removeChannel(channelRef.current);
+        } catch (cleanupError) {
+          console.warn('Error during channel cleanup:', cleanupError);
+        }
         channelRef.current = null;
       }
     };

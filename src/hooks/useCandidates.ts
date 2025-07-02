@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { JobApplication } from '@/types/job';
@@ -11,13 +12,16 @@ export const useCandidates = () => {
   const fetchCandidates = async () => {
     try {
       console.log('Fetching candidates from Supabase...');
+      setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('candidates')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Candidates fetch error:', error);
         throw error;
       }
 
@@ -25,32 +29,33 @@ export const useCandidates = () => {
 
       const transformedCandidates: JobApplication[] = (data || []).map(candidate => ({
         id: candidate.id,
-        jobId: candidate.job_id,
-        fullName: candidate.full_name,
-        age: candidate.age,
-        email: candidate.email,
-        phone: candidate.phone,
+        jobId: candidate.job_id || '',
+        fullName: candidate.full_name || 'Sin nombre',
+        age: candidate.age || 0,
+        email: candidate.email || '',
+        phone: candidate.phone || '',
         selectedPositions: candidate.selected_positions || [],
-        sectorExperience: candidate.sector_experience as 'Sí' | 'No',
-        positionExperience: candidate.position_experience as 'Sí' | 'No',
-        availability: candidate.availability as 'Inmediata' | '< 1 mes' | '1-3 meses' | '> 3 meses',
+        sectorExperience: (candidate.sector_experience as 'Sí' | 'No') || 'No',
+        positionExperience: (candidate.position_experience as 'Sí' | 'No') || 'No',
+        availability: (candidate.availability as 'Inmediata' | '< 1 mes' | '1-3 meses' | '> 3 meses') || 'Inmediata',
         relevantExperience: '',
         additionalComments: candidate.additional_comments || '',
         curriculum: undefined,
-        internalStatus: candidate.estado_interno as 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato',
+        internalStatus: (candidate.estado_interno as 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato') || 'nuevo',
         createdAt: new Date(candidate.created_at),
         updatedAt: new Date(candidate.updated_at),
-        consentGiven: candidate.consent_given,
+        consentGiven: candidate.consent_given || false,
         cvUrl: candidate.cv_url
       }));
 
       console.log('Transformed candidates:', transformedCandidates);
       setCandidates(transformedCandidates);
       setError(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching candidates:', error);
-      setError('Error loading candidates. Please try again.');
-      setCandidates([]);
+      const errorMessage = error.message || 'Unknown error occurred';
+      setError(`Error loading candidates: ${errorMessage}`);
+      setCandidates([]); // Fallback to empty array
     } finally {
       setLoading(false);
     }
@@ -69,7 +74,7 @@ export const useCandidates = () => {
         .eq('id', candidateId);
 
       if (error) {
-        console.error('Supabase update error:', error);
+        console.error('Candidate status update error:', error);
         throw error;
       }
 
@@ -87,9 +92,10 @@ export const useCandidates = () => {
             : candidate
         )
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating candidate status:', error);
-      throw new Error('Error updating candidate status. Please try again.');
+      const errorMessage = error.message || 'Error desconocido';
+      throw new Error(`No se pudo actualizar el estado del candidato: ${errorMessage}`);
     }
   };
 
@@ -106,6 +112,7 @@ export const useCandidates = () => {
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking duplicate candidate:', checkError);
         throw checkError;
       }
 
@@ -136,15 +143,20 @@ export const useCandidates = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Candidate creation error:', error);
+        throw error;
+      }
+      
       console.log('Successfully added candidate:', data);
       await fetchCandidates(); // Refresh the list
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding candidate:', error);
+      const errorMessage = error.message || 'Error desconocido';
       return { 
         success: false, 
-        error: 'Error adding candidate. Please try again.' 
+        error: `No se pudo añadir el candidato: ${errorMessage}` 
       };
     }
   };
@@ -182,8 +194,8 @@ export const useCandidates = () => {
         .subscribe((status) => {
           console.log('Candidates channel subscription status:', status);
           if (status === 'CHANNEL_ERROR') {
-            console.error('Failed to subscribe to candidates channel');
-            setError('Real-time updates may not be available');
+            console.error('Failed to subscribe to candidates channel - real-time updates may not work');
+            // Don't set error state for subscription failures, just log
           }
         });
     } catch (error) {
