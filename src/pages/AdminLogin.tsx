@@ -19,7 +19,7 @@ const AdminLogin = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (username === 'admin' && password === 'admin') {
+    if (username === 'tabanco' && password === 'Labat') {
       localStorage.setItem('isAdmin', 'true');
       navigate('/admin');
     } else {
