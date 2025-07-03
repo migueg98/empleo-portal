@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -8,17 +7,35 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Mail, Phone, Calendar, FileText, ExternalLink } from 'lucide-react';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import { Search, Mail, Phone, Calendar, FileText, ExternalLink, Trash2 } from 'lucide-react';
 import { useCandidates } from '@/hooks/useCandidates';
 
 const CandidatePortalContent = () => {
   const [email, setEmail] = useState('');
   const [searchPerformed, setSearchPerformed] = useState(false);
-  const { candidates, loading } = useCandidates();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { candidates, loading, deleteCandidate } = useCandidates();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchPerformed(true);
+  };
+
+  const handleDeleteCandidate = async (candidateId: string) => {
+    setDeletingId(candidateId);
+    await deleteCandidate(candidateId);
+    setDeletingId(null);
   };
 
   // Safe filtering with null checks
@@ -129,9 +146,42 @@ const CandidatePortalContent = () => {
                               </span>
                             </CardDescription>
                           </div>
-                          <Badge className={getStatusColor(application.internalStatus)}>
-                            {getStatusText(application.internalStatus)}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getStatusColor(application.internalStatus)}>
+                              {getStatusText(application.internalStatus)}
+                            </Badge>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  disabled={deletingId === application.id}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 size={14} />
+                                  {deletingId === application.id ? 'Eliminando...' : 'Eliminar'}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar datos?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta acción eliminará permanentemente todos tus datos de esta candidatura. 
+                                    No podrás recuperar esta información una vez eliminada.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteCandidate(application.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Eliminar definitivamente
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent>

@@ -1,7 +1,7 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { JobApplication } from '@/types/job';
+import { toast } from '@/hooks/use-toast';
 
 export const useCandidates = () => {
   const [candidates, setCandidates] = useState<JobApplication[]>([]);
@@ -161,6 +161,50 @@ export const useCandidates = () => {
     }
   };
 
+  const deleteCandidate = async (candidateId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      console.log(`Deleting candidate ${candidateId}`);
+      
+      const { error } = await supabase
+        .from('candidates')
+        .delete()
+        .eq('id', candidateId);
+
+      if (error) {
+        console.error('Candidate deletion error:', error);
+        throw error;
+      }
+
+      console.log(`Successfully deleted candidate ${candidateId}`);
+      
+      // Update local state immediately for better UX
+      setCandidates(prevCandidates => 
+        prevCandidates.filter(candidate => candidate.id !== candidateId)
+      );
+
+      toast({
+        title: "Datos eliminados",
+        description: "Tus datos han sido eliminados correctamente.",
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error deleting candidate:', error);
+      const errorMessage = error.message || 'Error desconocido';
+      
+      toast({
+        title: "Error",
+        description: `No se pudieron eliminar los datos: ${errorMessage}`,
+        variant: "destructive",
+      });
+
+      return { 
+        success: false, 
+        error: `No se pudieron eliminar los datos: ${errorMessage}` 
+      };
+    }
+  };
+
   useEffect(() => {
     console.log('useCandidates: Setting up subscription...');
     fetchCandidates();
@@ -222,6 +266,7 @@ export const useCandidates = () => {
     error,
     updateCandidateStatus, 
     addCandidate,
+    deleteCandidate,
     refreshCandidates: fetchCandidates 
   };
 };
