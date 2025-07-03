@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Inter', 'system-ui', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -34,11 +38,13 @@ export default {
 				},
 				accent: {
 					DEFAULT: '#C79300',
+					light: '#D4A617',
 					foreground: '#ffffff'
 				},
 				bg: '#F8F8F8',
 				text: '#222222',
 				line: '#DADADA',
+				section: '#F2F4F7',
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
@@ -103,6 +109,9 @@ export default {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out'
+			},
+			lineHeight: {
+				'relaxed': '1.625'
 			}
 		}
 	},

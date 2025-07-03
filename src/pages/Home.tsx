@@ -5,18 +5,20 @@ import Footer from '@/components/Footer';
 import BusinessCard from '@/components/BusinessCard';
 import VacancyCard from '@/components/VacancyCard';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { businesses } from '@/data/mockJobs';
 import { Users, Heart, Wine, ArrowRight } from 'lucide-react';
 import { useJobs } from '@/hooks/useJobs';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const Home = () => {
   const { jobs, loading } = useJobs();
   
-  // Get the 3 most recent active jobs
+  // Get the 4 most recent active jobs for desktop
   const featuredJobs = jobs
     .filter(job => job.isActive)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 3);
+    .slice(0, 4);
 
   // Convert jobs to vacancy format for VacancyCard
   const featuredVacancies = featuredJobs.map(job => ({
@@ -29,23 +31,34 @@ const Home = () => {
     sectorId: job.sectorId
   }));
 
+  const getSectorBadgeColor = (sector: string) => {
+    if (sector.toLowerCase().includes('hostelería') || sector.toLowerCase().includes('tabanco') || sector.toLowerCase().includes('restaurante')) {
+      return 'bg-accent/10 text-accent border-accent/20';
+    }
+    if (sector.toLowerCase().includes('distribuidora') || sector.toLowerCase().includes('licojerez')) {
+      return 'bg-primary/10 text-primary border-primary/20';
+    }
+    return 'bg-gray-100 text-gray-600 border-gray-200';
+  };
+
   return (
-    <div className="min-h-screen bg-bg text-text">
+    <div className="min-h-screen bg-bg text-text font-sans">
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-primary text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-fade-in">
+      <section className="bg-primary text-white py-20">
+        <div className="container mx-auto px-6 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-2 animate-fade-in relative">
             Únete a Nuestro Equipo
+            <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-0.5 bg-accent mt-2"></span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl mb-10 opacity-90 max-w-3xl mx-auto leading-relaxed mt-6">
             Forma parte de la tradición hostelera de Jerez de la Frontera
           </p>
           <Link to="/empleos">
             <Button 
               size="lg" 
-              className="bg-accent hover:bg-accent/90 text-white text-lg px-8 py-3"
+              className="bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent text-white text-lg px-10 py-4 h-12 transition-all duration-200 active:scale-95 focus:ring-2 focus:ring-accent focus:ring-offset-2"
             >
               Ver Empleos Disponibles
               <ArrowRight className="ml-2" size={20} />
@@ -55,18 +68,18 @@ const Home = () => {
       </section>
 
       {/* About Section */}
-      <section className="py-16 bg-white" id="quienes-somos">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
+      <section className="py-20 bg-section" id="quienes-somos">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-8">
               Quiénes Somos
             </h2>
             <div className="max-w-4xl mx-auto">
-              <p className="text-lg text-text mb-6 leading-relaxed">
+              <p className="text-lg text-text mb-8 leading-relaxed">
                 Somos un grupo hostelero nacido en Jerez de la Frontera. Gestionamos cuatro tabancos 
                 de tradición centenaria y una distribuidora de bebidas:
               </p>
-              <div className="grid md:grid-cols-3 gap-4 text-primary font-medium mb-6">
+              <div className="grid md:grid-cols-3 gap-6 text-primary font-medium mb-8">
                 <div className="flex items-center justify-center gap-2">
                   <Wine size={20} />
                   <span>Tabanco Las Banderillas</span>
@@ -98,18 +111,18 @@ const Home = () => {
       </section>
 
       {/* Business Section */}
-      <section className="py-16 bg-bg">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
               Nuestros Negocios
             </h2>
-            <p className="text-lg text-text/70">
+            <p className="text-lg text-text/70 leading-relaxed">
               Conoce los establecimientos que forman nuestro grupo hostelero
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
             {businesses.map((business) => (
               <BusinessCard key={business.id} business={business} />
             ))}
@@ -118,13 +131,13 @@ const Home = () => {
       </section>
 
       {/* Featured Jobs */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+      <section className="py-20 bg-section">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
               Últimas Oportunidades
             </h2>
-            <p className="text-lg text-text/70">
+            <p className="text-lg text-text/70 leading-relaxed">
               Descubre las posiciones abiertas en nuestro grupo
             </p>
           </div>
@@ -135,22 +148,56 @@ const Home = () => {
             </div>
           ) : featuredVacancies.length > 0 ? (
             <>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Desktop View - 4 cards */}
+              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {featuredVacancies.map((vacancy) => (
-                  <VacancyCard key={vacancy.id} vacancy={vacancy} />
+                  <div key={vacancy.id} className="relative">
+                    <Badge 
+                      className={`absolute top-4 right-4 z-10 text-xs font-medium ${getSectorBadgeColor(vacancy.sector)}`}
+                    >
+                      {vacancy.sector}
+                    </Badge>
+                    <VacancyCard vacancy={vacancy} />
+                  </div>
                 ))}
               </div>
 
-              <div className="text-center mt-8">
+              {/* Mobile View - Carousel */}
+              <div className="md:hidden">
+                <Carousel className="w-full max-w-sm mx-auto">
+                  <CarouselContent>
+                    {featuredVacancies.map((vacancy) => (
+                      <CarouselItem key={vacancy.id}>
+                        <div className="relative">
+                          <Badge 
+                            className={`absolute top-4 right-4 z-10 text-xs font-medium ${getSectorBadgeColor(vacancy.sector)}`}
+                          >
+                            {vacancy.sector}
+                          </Badge>
+                          <VacancyCard vacancy={vacancy} />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </Carousel>
+              </div>
+
+              <div className="text-center mt-12">
                 <Link to="/empleos">
-                  <Button variant="outline" size="lg" className="text-primary border-primary hover:bg-primary/10">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="text-primary border-primary hover:bg-accent/10 hover:border-accent hover:text-accent transition-all duration-200 active:scale-95 min-h-[48px] focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  >
                     Ver Todas las Posiciones
                   </Button>
                 </Link>
               </div>
             </>
           ) : (
-            <div className="text-center py-12">
+            <div className="text-center py-16">
               <p className="text-text/70 text-lg mb-4">
                 No hay oportunidades disponibles en este momento.
               </p>

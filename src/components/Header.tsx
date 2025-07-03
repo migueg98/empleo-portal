@@ -19,25 +19,30 @@ const Header = () => {
   const NavLink = ({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) => (
     <Link 
       to={to} 
-      className={`text-sm font-medium text-primary hover:text-accent transition-colors ${
-        location.pathname === to ? 'text-accent' : ''
+      className={`text-sm font-medium transition-colors duration-200 relative group ${
+        location.pathname === to 
+          ? 'text-accent after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-accent' 
+          : 'text-primary hover:text-accent'
       }`}
       onClick={onClick}
     >
       {label}
+      {location.pathname !== to && (
+        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent scale-x-0 transition-transform duration-200 group-hover:scale-x-100"></span>
+      )}
     </Link>
   );
 
   return (
-    <header className="bg-white border-b border-line shadow-sm">
-      <div className="container mx-auto px-4 py-4">
+    <header className="bg-white border-b border-line shadow-sm sticky top-0 z-50 backdrop-blur-sm">
+      <div className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
-          <Link to="/" className="text-base font-bold text-primary hover:opacity-80 transition-opacity">
+          <Link to="/" className="text-base font-bold text-primary hover:opacity-80 transition-opacity duration-200">
             Bolsa de Trabajo
           </Link>
           
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-6">
+          <nav className="hidden md:flex space-x-8">
             {navigationItems.map((item) => (
               <NavLink key={item.to} to={item.to} label={item.label} />
             ))}
@@ -47,12 +52,16 @@ const Header = () => {
           <div className="md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-primary hover:text-accent">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-primary hover:text-accent min-h-[48px] transition-colors duration-200 active:scale-95"
+                >
                   <Menu size={20} />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-64">
-                <nav className="flex flex-col space-y-4 mt-8">
+                <nav className="flex flex-col space-y-6 mt-8">
                   {navigationItems.map((item) => (
                     <NavLink 
                       key={item.to} 
