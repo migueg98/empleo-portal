@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -42,36 +43,6 @@ const CandidatePortalContent = () => {
   const userApplications = (candidates || []).filter(app => 
     searchPerformed && email && app.email.toLowerCase() === email.toLowerCase()
   );
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'nuevo':
-        return 'bg-blue-100 text-blue-800';
-      case 'no_valido':
-        return 'bg-red-100 text-red-800';
-      case 'posible':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'buen_candidato':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'nuevo':
-        return 'En revisión';
-      case 'no_valido':
-        return 'No válido';
-      case 'posible':
-        return 'Candidato posible';
-      case 'buen_candidato':
-        return 'Buen candidato';
-      default:
-        return 'Desconocido';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-bg text-text">
@@ -129,7 +100,7 @@ const CandidatePortalContent = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <CardTitle className="text-lg">
-                              Postulación - {application.jobId}
+                              {application.jobTitle} - {application.jobSector}
                             </CardTitle>
                             <CardDescription className="flex items-center gap-4 mt-2">
                               <span className="flex items-center gap-1">
@@ -147,9 +118,6 @@ const CandidatePortalContent = () => {
                             </CardDescription>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge className={getStatusColor(application.internalStatus)}>
-                              {getStatusText(application.internalStatus)}
-                            </Badge>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button 

@@ -23,6 +23,8 @@ export interface JobVacancy {
 export interface JobApplication {
   id: string;
   jobId: string;
+  jobTitle?: string;
+  jobSector?: string;
   fullName: string;
   age: number;
   email: string;

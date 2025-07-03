@@ -27,26 +27,52 @@ export const useCandidates = () => {
 
       console.log('Raw candidates data:', data);
 
-      const transformedCandidates: JobApplication[] = (data || []).map(candidate => ({
-        id: candidate.id,
-        jobId: candidate.job_id || '',
-        fullName: candidate.full_name || 'Sin nombre',
-        age: candidate.age || 0,
-        email: candidate.email || '',
-        phone: candidate.phone || '',
-        selectedPositions: candidate.selected_positions || [],
-        sectorExperience: (candidate.sector_experience as 'Sí' | 'No') || 'No',
-        positionExperience: (candidate.position_experience as 'Sí' | 'No') || 'No',
-        availability: (candidate.availability as 'Inmediata' | '< 1 mes' | '1-3 meses' | '> 3 meses') || 'Inmediata',
-        relevantExperience: '',
-        additionalComments: candidate.additional_comments || '',
-        curriculum: undefined,
-        internalStatus: (candidate.estado_interno as 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato') || 'nuevo',
-        createdAt: new Date(candidate.created_at),
-        updatedAt: new Date(candidate.updated_at),
-        consentGiven: candidate.consent_given || false,
-        cvUrl: candidate.cv_url
-      }));
+      // Fetch job information for all candidates
+      const jobIds = [...new Set((data || []).map(candidate => candidate.job_id))];
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs_with_sectors')
+        .select('id, title, sector_name')
+        .in('id', jobIds);
+
+      if (jobsError) {
+        console.error('Jobs fetch error:', jobsError);
+        // Don't throw here, just log - we can still show candidates without job details
+      }
+
+      // Create a map of job information
+      const jobsMap = new Map();
+      (jobsData || []).forEach(job => {
+        jobsMap.set(job.id, {
+          title: job.title,
+          sector: job.sector_name
+        });
+      });
+
+      const transformedCandidates: JobApplication[] = (data || []).map(candidate => {
+        const jobInfo = jobsMap.get(candidate.job_id);
+        return {
+          id: candidate.id,
+          jobId: candidate.job_id || '',
+          jobTitle: jobInfo?.title || 'Trabajo no encontrado',
+          jobSector: jobInfo?.sector || 'Sector no encontrado',
+          fullName: candidate.full_name || 'Sin nombre',
+          age: candidate.age || 0,
+          email: candidate.email || '',
+          phone: candidate.phone || '',
+          selectedPositions: candidate.selected_positions || [],
+          sectorExperience: (candidate.sector_experience as 'Sí' | 'No') || 'No',
+          positionExperience: (candidate.position_experience as 'Sí' | 'No') || 'No',
+          availability: (candidate.availability as 'Inmediata' | '< 1 mes' | '1-3 meses' | '> 3 meses') || 'Inmediata',
+          relevantExperience: '',
+          additionalComments: candidate.additional_comments || '',
+          curriculum: undefined,
+          internalStatus: (candidate.estado_interno as 'nuevo' | 'no_valido' | 'posible' | 'buen_candidato') || 'nuevo',
+          createdAt: new Date(candidate.created_at),
+          updatedAt: new Date(candidate.updated_at),
+          consentGiven: candidate.consent_given || false,
+          cvUrl: candidate.cv_url
+        };
+      });
 
       console.log('Transformed candidates:', transformedCandidates);
       setCandidates(transformedCandidates);
