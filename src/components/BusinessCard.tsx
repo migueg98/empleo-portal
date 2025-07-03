@@ -9,7 +9,7 @@ interface BusinessCardProps {
 
 const BusinessCard = ({ business }: BusinessCardProps) => {
   return (
-    <Card className="bg-white border border-line hover:shadow-md transition-all duration-200 h-full group">
+    <Card className="bg-white border border-line hover:shadow-lg hover:-translate-y-1 transition-all duration-150 h-full group">
       <div className="aspect-[4/3] bg-gray-100 rounded-t-lg overflow-hidden flex items-center justify-center border-b border-line">
         <img 
           src={business.imageUrl} 

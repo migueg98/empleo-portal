@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -33,12 +32,12 @@ const Home = () => {
 
   const getSectorBadgeColor = (sector: string) => {
     if (sector.toLowerCase().includes('hostelería') || sector.toLowerCase().includes('tabanco') || sector.toLowerCase().includes('restaurante')) {
-      return 'bg-accent/10 text-accent border-accent/20';
+      return 'bg-accent text-white border-accent';
     }
     if (sector.toLowerCase().includes('distribuidora') || sector.toLowerCase().includes('licojerez')) {
-      return 'bg-primary/10 text-primary border-primary/20';
+      return 'bg-primary text-white border-primary';
     }
-    return 'bg-gray-100 text-gray-600 border-gray-200';
+    return 'bg-primary text-white border-primary';
   };
 
   return (
@@ -46,24 +45,27 @@ const Home = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-primary text-white py-20">
+      <section className="bg-primary text-white py-24 md:py-32">
         <div className="container mx-auto px-6 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-2 animate-fade-in relative">
+          <h1 className="text-3xl xs:text-4xl md:text-5xl font-bold mb-2 animate-fade-in relative">
             Únete a Nuestro Equipo
             <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-0.5 bg-accent mt-2"></span>
           </h1>
-          <p className="text-xl md:text-2xl mb-10 opacity-90 max-w-3xl mx-auto leading-relaxed mt-6">
+          <p className="text-lg xs:text-xl md:text-2xl mb-12 opacity-90 max-w-3xl mx-auto leading-relaxed mt-6">
             Forma parte de la tradición hostelera de Jerez de la Frontera
           </p>
-          <Link to="/empleos">
+          <a href="#oportunidades">
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent text-white text-lg px-10 py-4 h-12 transition-all duration-200 active:scale-95 focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              className="bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent hover:brightness-110 text-white text-lg px-10 py-4 h-12 transition-all duration-200 active:scale-95 focus:ring-2 focus:ring-accent focus:ring-offset-2"
+              onClick={() => {
+                document.getElementById('oportunidades')?.scrollIntoView({ behavior: 'smooth' });
+              }}
             >
               Ver Empleos Disponibles
               <ArrowRight className="ml-2" size={20} />
             </Button>
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -131,7 +133,7 @@ const Home = () => {
       </section>
 
       {/* Featured Jobs */}
-      <section className="py-20 bg-section">
+      <section className="py-20 bg-section" id="oportunidades">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
@@ -149,7 +151,7 @@ const Home = () => {
           ) : featuredVacancies.length > 0 ? (
             <>
               {/* Desktop View - 4 cards */}
-              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 2xl:gap-10 gap-8">
                 {featuredVacancies.map((vacancy) => (
                   <div key={vacancy.id} className="relative">
                     <Badge 

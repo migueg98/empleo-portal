@@ -2,7 +2,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Menu } from 'lucide-react';
 
 const Header = () => {
@@ -34,7 +34,7 @@ const Header = () => {
   );
 
   return (
-    <header className="bg-white border-b border-line shadow-sm sticky top-0 z-50 backdrop-blur-sm">
+    <header className="bg-white/95 backdrop-blur-sm border-b border-line shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
           <Link to="/" className="text-base font-bold text-primary hover:opacity-80 transition-opacity duration-200">
@@ -50,18 +50,18 @@ const Header = () => {
 
           {/* Mobile Navigation */}
           <div className="md:hidden">
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
+            <Drawer open={isOpen} onOpenChange={setIsOpen}>
+              <DrawerTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-primary hover:text-accent min-h-[48px] transition-colors duration-200 active:scale-95"
+                  className="text-primary hover:text-accent min-h-[48px] min-w-[48px] transition-colors duration-200 active:scale-95"
                 >
                   <Menu size={20} />
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-64">
-                <nav className="flex flex-col space-y-6 mt-8">
+              </DrawerTrigger>
+              <DrawerContent className="w-full">
+                <nav className="flex flex-col space-y-6 p-8">
                   {navigationItems.map((item) => (
                     <NavLink 
                       key={item.to} 
@@ -71,8 +71,8 @@ const Header = () => {
                     />
                   ))}
                 </nav>
-              </SheetContent>
-            </Sheet>
+              </DrawerContent>
+            </Drawer>
           </div>
         </div>
       </div>
