@@ -47,25 +47,22 @@ const Home = () => {
       {/* Hero Section */}
       <section className="bg-primary text-white py-24 md:py-32">
         <div className="container mx-auto px-6 text-center">
-          <h1 className="text-3xl xs:text-4xl md:text-5xl font-bold mb-2 animate-fade-in relative">
+          <h1 className="text-2xl xs:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 animate-fade-in relative">
             Únete a Nuestro Equipo
-            <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-0.5 bg-accent mt-2"></span>
+            <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-full h-0.5 bg-accent"></span>
           </h1>
           <p className="text-lg xs:text-xl md:text-2xl mb-12 opacity-90 max-w-3xl mx-auto leading-relaxed mt-6">
             Forma parte de la tradición hostelera de Jerez de la Frontera
           </p>
-          <a href="#oportunidades">
+          <Link to="/empleos">
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent hover:brightness-110 text-white text-lg px-10 py-4 h-12 transition-all duration-200 active:scale-95 focus:ring-2 focus:ring-accent focus:ring-offset-2"
-              onClick={() => {
-                document.getElementById('oportunidades')?.scrollIntoView({ behavior: 'smooth' });
-              }}
             >
               Ver Empleos Disponibles
               <ArrowRight className="ml-2" size={20} />
             </Button>
-          </a>
+          </Link>
         </div>
       </section>
 

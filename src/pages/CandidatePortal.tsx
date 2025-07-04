@@ -97,12 +97,12 @@ const CandidatePortalContent = () => {
                   {userApplications.map((application) => (
                     <Card key={application.id} className="border-l-4 border-l-primary">
                       <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div>
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                          <div className="flex-1">
                             <CardTitle className="text-lg">
                               {application.jobTitle} - {application.jobSector}
                             </CardTitle>
-                            <CardDescription className="flex items-center gap-4 mt-2">
+                            <CardDescription className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mt-2">
                               <span className="flex items-center gap-1">
                                 <Mail size={14} />
                                 {application.email}
@@ -117,17 +117,19 @@ const CandidatePortalContent = () => {
                               </span>
                             </CardDescription>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-end w-full md:w-auto px-2 md:px-0">
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button 
                                   variant="outline" 
                                   size="sm"
                                   disabled={deletingId === application.id}
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 min-h-[44px] w-full md:w-auto"
                                 >
                                   <Trash2 size={14} />
-                                  {deletingId === application.id ? 'Eliminando...' : 'Eliminar'}
+                                  <span className="ml-1">
+                                    {deletingId === application.id ? 'Eliminando...' : 'Eliminar'}
+                                  </span>
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
